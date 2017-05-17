@@ -54,6 +54,11 @@ namespace vfs {
         {
             return base_type::fileAccess();
         }
+        //------------------------------------------------------------------------------------------
+        bool createMapping(int64_t viewSize)
+        {
+            return base_type::createMapping(viewSize);
+        }
 
     public:
         //------------------------------------------------------------------------------------------

@@ -33,6 +33,8 @@ namespace vfs {
 
         bool map()
         {
+            spFile_->createMapping(0);
+
             const auto access = spFile_->fileAccess();
             const auto fileMapAccess = (
                 (access == file_access::read_only)
@@ -50,6 +52,7 @@ namespace vfs {
             {
                 const auto errorCode = GetLastError();
                 vfs_errorf("MapViewOfFile(%ws) failed with error: %s", spFile_->fileName().c_str(), get_last_error_as_string(errorCode).c_str());
+                return false;
             }
 
             MEMORY_BASIC_INFORMATION memInfo;
@@ -58,6 +61,8 @@ namespace vfs {
             {
                 totalSize_ = memInfo.RegionSize;
             }
+
+            return true;
         }
 
         bool unmap()
@@ -130,11 +135,6 @@ namespace vfs {
         T* cursor()
         {
             return reinterpret_cast<T*>(pCursor_);
-        }
-
-        uint8_t* cursor()
-        {
-            return cursor<>();
         }
 
         bool skip(int64_t offsetInBytes)
