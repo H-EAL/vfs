@@ -60,7 +60,7 @@ namespace vfs {
                 // Access
                 win_file_access(access),
                 // TODO: Add shared access
-                0,
+                win_file_share_mode(file_share_mode::read),
                 // Security attributes
                 nullptr,
                 // Creation options
@@ -225,7 +225,21 @@ namespace vfs {
 
             vfs_check(false);
             return 0;
-        }
+		}
+
+		static DWORD win_file_share_mode(file_share_mode shareMode)
+		{
+			switch (shareMode)
+			{
+			case file_share_mode::exclusive:	return 0;
+			case file_share_mode::can_delete:	return FILE_SHARE_DELETE;
+			case file_share_mode::read:			return FILE_SHARE_READ;
+			case file_share_mode::write:		return FILE_SHARE_WRITE;
+			}
+
+			vfs_check(false);
+			return 0;
+		}
 
         static DWORD win_file_creation_options(file_creation_options creationOption)
         {
