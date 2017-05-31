@@ -14,7 +14,8 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     class win_file_view
     {
-    protected:
+	protected:
+		//------------------------------------------------------------------------------------------
         win_file_view(file_sptr spFile, int64_t viewSize)
             : spFile_(std::move(spFile))
             , fileMappingHandle_(nullptr)
@@ -22,18 +23,24 @@ namespace vfs {
             , pCursor_(nullptr)
             , totalSize_(0)
         {
-            map();
+			vfs_check(spFile_->isValid());
+            map(viewSize);
         }
 
+		//------------------------------------------------------------------------------------------
         ~win_file_view()
         {
             flush();
             unmap();
         }
 
-        bool map()
+		//------------------------------------------------------------------------------------------
+        bool map(int64_t viewSize)
         {
-            spFile_->createMapping(0);
+			if (!spFile_->createMapping(viewSize))
+			{
+				return false;
+			}
 
             const auto access = spFile_->fileAccess();
             const auto fileMapAccess = (
@@ -65,6 +72,7 @@ namespace vfs {
             return true;
         }
 
+		//------------------------------------------------------------------------------------------
         bool unmap()
         {
             if (pData_ && !UnmapViewOfFile(pData_))
@@ -74,6 +82,7 @@ namespace vfs {
             return true;
         }
 
+		//------------------------------------------------------------------------------------------
         bool flush()
         {
             if (!FlushViewOfFile(pData_, 0))
@@ -83,6 +92,7 @@ namespace vfs {
             return true;
         }
 
+		//------------------------------------------------------------------------------------------
         int64_t read(uint8_t *dst, int64_t sizeInBytes)
         {
             if (canMoveCursor(sizeInBytes))
@@ -94,6 +104,7 @@ namespace vfs {
             return 0;
         }
 
+		//------------------------------------------------------------------------------------------
         int64_t write(const uint8_t *src, int64_t sizeInBytes)
         {
             if (canMoveCursor(sizeInBytes))
@@ -105,38 +116,45 @@ namespace vfs {
             return 0;
         }
 
+		//------------------------------------------------------------------------------------------
         bool isValid() const
         {
             return pData_ != nullptr;
         }
 
+		//------------------------------------------------------------------------------------------
         int64_t totalSize() const
         {
             return totalSize_;
         }
 
+		//------------------------------------------------------------------------------------------
         bool canMoveCursor(int64_t offsetInBytes) const
         {
             return isValid() && (pCursor_ - pData_ + offsetInBytes) <= totalSize_;
         }
 
+		//------------------------------------------------------------------------------------------
         template<typename T = uint8_t>
         T* data()
         {
             return reinterpret_cast<T*>(pData_);
         }
 
+		//------------------------------------------------------------------------------------------
         uint8_t* data()
         {
             return data<>();
         }
 
+		//------------------------------------------------------------------------------------------
         template<typename T = uint8_t>
         T* cursor()
         {
             return reinterpret_cast<T*>(pCursor_);
         }
 
+		//------------------------------------------------------------------------------------------
         bool skip(int64_t offsetInBytes)
         {
             if (canMoveCursor(offsetInBytes))
@@ -147,7 +165,8 @@ namespace vfs {
             return false;
         }
 
-    private:
+	private:
+		//------------------------------------------------------------------------------------------
         file_sptr   spFile_;
         HANDLE      fileMappingHandle_;
         uint8_t     *pData_;

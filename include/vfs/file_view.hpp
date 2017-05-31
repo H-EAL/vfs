@@ -33,7 +33,7 @@ namespace vfs {
     )
     {
         auto spFile = open_read_only(fileName, creationOptions, fileFlags, fileAttributes);
-        return file_view_sptr(new file_view_stream(std::move(spFile)));
+        return spFile->isValid() ? file_view_sptr(new file_view_stream(std::move(spFile))) : nullptr;
     }
     //----------------------------------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ namespace vfs {
     )
     {
         auto spFile = open_read_write(fileName, creationOptions, fileFlags, fileAttributes);
-        return file_view_sptr(new file_view_stream(std::move(spFile)));
+        return spFile->isValid() ? file_view_sptr(new file_view_stream(std::move(spFile))) : nullptr;
     }
     //----------------------------------------------------------------------------------------------
 

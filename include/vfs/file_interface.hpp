@@ -58,7 +58,12 @@ namespace vfs {
         bool createMapping(int64_t viewSize)
         {
             return base_type::createMapping(viewSize);
-        }
+		}
+		//------------------------------------------------------------------------------------------
+		bool isValid()
+		{
+			return base_type::isValid();
+		}
 
     public:
         //------------------------------------------------------------------------------------------
