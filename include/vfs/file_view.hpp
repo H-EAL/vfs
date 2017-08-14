@@ -43,11 +43,12 @@ namespace vfs {
         const path              &fileName,
         file_creation_options   creationOptions,
         file_flags              fileFlags = file_flags::none,
-        file_attributes         fileAttributes = file_attributes::normal
+        file_attributes         fileAttributes = file_attributes::normal,
+        int64_t                 viewSize = 0
     )
     {
         auto spFile = open_read_write(fileName, creationOptions, fileFlags, fileAttributes);
-        return spFile->isValid() ? file_view_sptr(new file_view_stream(std::move(spFile))) : nullptr;
+        return spFile->isValid() ? file_view_sptr(new file_view_stream(std::move(spFile), viewSize)) : nullptr;
     }
     //----------------------------------------------------------------------------------------------
 

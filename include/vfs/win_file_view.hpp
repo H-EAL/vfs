@@ -21,7 +21,7 @@ namespace vfs {
             , fileMappingHandle_(nullptr)
             , pData_(nullptr)
             , pCursor_(nullptr)
-            , totalSize_(0)
+            , totalSize_(viewSize)
         {
 			vfs_check(spFile_->isValid());
             map(viewSize);
