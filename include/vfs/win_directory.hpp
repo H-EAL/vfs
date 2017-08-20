@@ -15,28 +15,13 @@ namespace vfs {
     class win_directory
     {
     protected:
-        const path& dirName() const
-        {
-            return dirPath_;
-        }
-
-    protected:
-        //------------------------------------------------------------------------------------------
-        win_directory(const path &name)
-            : dirPath_(name)
-        {}
-
-        //------------------------------------------------------------------------------------------
-        ~win_directory()
-        {}
-
-    protected:
         //------------------------------------------------------------------------------------------
         static bool exists(const path &dirPath)
         {
             const auto dwAttrib = GetFileAttributes(dirPath.c_str());
             return (dwAttrib != INVALID_FILE_ATTRIBUTES) && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
         }
+
         //------------------------------------------------------------------------------------------
         static bool create_directory(const path &dirPath)
         {
@@ -49,13 +34,19 @@ namespace vfs {
             return true;
         }
 
-    protected:
         //------------------------------------------------------------------------------------------
         template<typename _Dir>
-        void scan(std::vector<_Dir> &subDirectories, std::vector<path> &files, int32_t recurseToDepth = 0)
+        static void scan(const path &dirPath, std::vector<_Dir> &subDirectories, std::vector<path> &files)
         {
             auto findData = WIN32_FIND_DATA{};
-            auto hFile = FindFirstFile(path::combine(dirPath_, path("*")).c_str(), &findData);
+            auto hFile = FindFirstFile(path::combine(dirPath, path("*")).c_str(), &findData);
+
+            if (hFile == INVALID_HANDLE_VALUE)
+            {
+                const auto errorCode = GetLastError();
+                vfs_errorf("FindFirstFile(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+                return;
+            }
 
             do
             {
@@ -64,7 +55,7 @@ namespace vfs {
                     continue;
                 }
 
-                const auto &currentFilePath = path::combine(dirPath_, path(findData.cFileName));
+                const auto &currentFilePath = path::combine(dirPath, path(findData.cFileName));
 
                 if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
@@ -76,11 +67,13 @@ namespace vfs {
                 }
 
             } while (FindNextFile(hFile, &findData) != 0);
-        }
 
-    private:
-        //------------------------------------------------------------------------------------------
-        path dirPath_;
+            const auto errorCode = GetLastError();
+            if (errorCode != ERROR_NO_MORE_FILES)
+            {
+                vfs_errorf("FindNextFile(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+            }
+        }
     };
     //----------------------------------------------------------------------------------------------
 

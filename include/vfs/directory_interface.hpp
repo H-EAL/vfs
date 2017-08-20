@@ -18,7 +18,7 @@ namespace vfs {
     public:
         //------------------------------------------------------------------------------------------
         directory_interface(const path &dirPath)
-            : base_type(dirPath)
+            : path_(dirPath)
         {}
 
     public:
@@ -35,15 +35,25 @@ namespace vfs {
 
     public:
         //------------------------------------------------------------------------------------------
-        const path& dirName() const
+        const path& getPath() const
         {
-            return base_type::dirName();
+            return path_;
+        }
+        //------------------------------------------------------------------------------------------
+        const auto& getSubDirectories() const
+        {
+            return subDirectories_;
+        }
+        //------------------------------------------------------------------------------------------
+        const auto& getFiles() const
+        {
+            return files_;
         }
         
         //------------------------------------------------------------------------------------------
         void scan(int32_t recurseToDepth = 0)
         {
-            base_type::scan(subDirectories_, files_, recurseToDepth);
+            base_type::scan(path_, subDirectories_, files_);
 
             if (recurseToDepth > 0)
             {
@@ -55,6 +65,7 @@ namespace vfs {
         }
 
     private:
+        path                    path_;
         std::vector<self_type>  subDirectories_;
         std::vector<path>       files_;
     };
