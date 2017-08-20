@@ -24,14 +24,21 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         file_interface
         (
-            const path              &fileName,
+            const path              &filePath,
             file_access             access,
             file_creation_options   creationOptions,
             file_flags              flags       = file_flags::none,
             file_attributes         attributes  = file_attributes::normal
         )
-            : base_type(fileName, access, creationOptions, flags, attributes)
+            : base_type(filePath, access, creationOptions, flags, attributes)
         {}
+
+    public:
+        //------------------------------------------------------------------------------------------
+        static bool exists(const path &filePath)
+        {
+            return base_type::exists(filePath);
+        }
 
     public:
         //------------------------------------------------------------------------------------------
@@ -66,6 +73,11 @@ namespace vfs {
 		}
 
     public:
+        //------------------------------------------------------------------------------------------
+        int64_t size() const
+        {
+            return base_type::size();
+        }
         //------------------------------------------------------------------------------------------
         int64_t read(uint8_t *dst, int64_t sizeInBytes)
         {

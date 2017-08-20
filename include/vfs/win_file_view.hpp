@@ -21,7 +21,7 @@ namespace vfs {
             , fileMappingHandle_(nullptr)
             , pData_(nullptr)
             , pCursor_(nullptr)
-            , totalSize_(viewSize)
+            , mappedTotalSize_(viewSize)
         {
 			vfs_check(spFile_->isValid());
             map(viewSize);
@@ -66,8 +66,10 @@ namespace vfs {
             const auto dwInfoBytesCount = VirtualQuery(pData_, &memInfo, sizeof(memInfo));
             if (dwInfoBytesCount != 0)
             {
-                totalSize_ = memInfo.RegionSize;
+                mappedTotalSize_ = memInfo.RegionSize;
             }
+
+            fileTotalSize_ = spFile_->size();
 
             return true;
         }
@@ -125,13 +127,13 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         int64_t totalSize() const
         {
-            return totalSize_;
+            return fileTotalSize_;
         }
 
 		//------------------------------------------------------------------------------------------
         bool canMoveCursor(int64_t offsetInBytes) const
         {
-            return isValid() && (pCursor_ - pData_ + offsetInBytes) <= totalSize_;
+            return isValid() && (pCursor_ - pData_ + offsetInBytes) <= mappedTotalSize_;
         }
 
 		//------------------------------------------------------------------------------------------
@@ -171,7 +173,8 @@ namespace vfs {
         HANDLE      fileMappingHandle_;
         uint8_t     *pData_;
         uint8_t     *pCursor_;
-        int64_t     totalSize_;
+        int64_t     fileTotalSize_;
+        int64_t     mappedTotalSize_;
     };
     //----------------------------------------------------------------------------------------------
 

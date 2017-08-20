@@ -84,6 +84,13 @@ namespace vfs {
         }
 
     protected:
+        static bool exists(const path &filePath)
+        {
+            const auto dwAttrib = GetFileAttributes(filePath.c_str());
+            return (dwAttrib != INVALID_FILE_ATTRIBUTES) && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+        }
+
+    protected:
         bool isValid() const
         {
             return fileHandle_ != INVALID_HANDLE_VALUE;

@@ -20,8 +20,8 @@
 namespace vfs {
 
     //----------------------------------------------------------------------------------------------
-    using cfile         = file_interface<file_impl>;
-    using file_stream   = stream_interface<cfile>;
+    using file          = file_interface<file_impl>;
+    using file_stream   = stream_interface<file>;
     //----------------------------------------------------------------------------------------------
     using file_sptr     = std::shared_ptr<file_stream>;
     using file_wptr     = std::weak_ptr<file_stream>;

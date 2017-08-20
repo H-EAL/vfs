@@ -12,145 +12,11 @@
 
 namespace vizua { namespace filesystem {
 
-    enum class auto_scan
-    {
-        on  = true,
-        off = false
-    };
-
-    class directory
-    {
-    public:
-        directory(const std::string &_path, auto_scan autoScan = auto_scan::off, int32_t recurseToDepth = 0)
-            : path_(_path)
-        {
-            if (autoScan == auto_scan::on)
-            {
-                scan(recurseToDepth);
-            }
-        }
-
-        void scan(int32_t recurseToDepth = 0)
-        {
-            scoped_dir __d(path_);
-
-            if (!__d.dirp)
-            {
-                vizua_errorf("Could not open directory: {}", path_);
-                return;
-            }
-
-            while (dirent *pEntry = readdir(__d.dirp))
-            {
-                switch (pEntry->d_type)
-                {
-                case DT_REG:
-                    files_.emplace_back(pEntry->d_name, pEntry->d_namlen);
-                    break;
-
-                case DT_DIR:
-                    if (!((pEntry->d_namlen == 1 && pEntry->d_name[0] == '.') ||
-                        (pEntry->d_namlen == 2 && pEntry->d_name[0] == '.' && pEntry->d_name[1] == '.')))
-                    {
-                        subDirectories_.emplace_back(std::string(pEntry->d_name, pEntry->d_namlen));
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-            }
-
-            if (recurseToDepth > 0)
-            {
-                for (auto &subDir : subDirectories_)
-                {
-                    subDir.scan(recurseToDepth - 1);
-                }
-            }
-        }
-
-        const auto& path() const
-        {
-            return path_;
-        }
-        
-        const auto& subDirectories() const
-        {
-            return subDirectories_;
-        }
-
-        const auto &files() const
-        {
-            return files_;
-        }
-
-    private:
-        struct scoped_dir
-        {
-            scoped_dir(const std::string &path)
-                : dirp(opendir(path.c_str()))
-            {}
-
-            ~scoped_dir()
-            {
-                if (dirp)
-                {
-                    closedir(dirp);
-                }
-            }
-
-            DIR *dirp;
-        };
-
-    private:
-        const std::string           path_;
-        std::vector<directory>      subDirectories_;
-        std::vector<std::string>    files_;
-    };
-
-
-
-    inline auto read_file_to_string(const std::string &filePath)
-    {
-        std::ifstream ifs(filePath);
-        std::string content((std::istreambuf_iterator<char>(ifs)),
-            (std::istreambuf_iterator<char>()));
-
-        return content;
-    }
-
-    inline auto read_file_to_vector(const std::string &filePath)
-    {
-        std::ifstream ifs(filePath);
-        std::vector<int8_t> buffer((std::istreambuf_iterator<char>(ifs)),
-            (std::istreambuf_iterator<char>()));
-
-        return buffer;
-    }
-
     inline int64_t get_file_size(const std::string &filePath)
     {
         struct _stat statBuf;
         const auto rc = _stat(filePath.c_str(), &statBuf);
         return rc == 0 ? statBuf.st_size : -1;
-    }
-
-    inline bool exists(const std::string &path)
-    {
-        struct stat info;
-        return stat(path.c_str(), &info) == 0;
-    }
-
-    inline bool create_directory(const std::string &path)
-    {
-        if (CreateDirectoryA(path.c_str(), nullptr) == FALSE)
-        {
-            const auto errorCode = GetLastError();
-            vizua_errorf("CreateDirectoryA({}) returned error: {}", path, get_last_error_as_string(errorCode));
-            return false;
-        }
-        return true;
     }
 
     inline bool create_path(const std::string &path)
@@ -217,28 +83,6 @@ namespace vizua { namespace filesystem {
             const auto errorCode = GetLastError();
             vizua_errorf("RemoveDirectoryA({}) returned error: {}", path, get_last_error_as_string(errorCode));
             return false;
-        }
-
-        return true;
-    }
-
-    inline bool move(const std::string &src, const std::string &dst, bool overwrite = false, int32_t maxAttempts = 1)
-    {
-        auto flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH;
-        if (overwrite)
-        {
-            flags |= MOVEFILE_REPLACE_EXISTING;
-        }
-
-        auto attempts = 0;
-        while (MoveFileExA(src.c_str(), dst.c_str(), flags) == FALSE)
-        {
-            if (++attempts == maxAttempts)
-            {
-                const auto errorCode = GetLastError();
-                vizua_errorf("MoveFileExA({}, {}, MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) failed after {} attempts, returned error: {}", src, dst, attempts, get_last_error_as_string(errorCode));
-                return false;
-            }
         }
 
         return true;

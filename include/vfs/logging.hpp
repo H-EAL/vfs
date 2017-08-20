@@ -20,7 +20,7 @@
     #define vfs_criticalf(MSG, ...)     fprintf(stderr, "[ critical ] " ## MSG ## "\n", ##__VA_ARGS__)
     #define vfs_critical(MSG)           vfs_criticalf(MSG,)
 
-    #define vfs_check(EXPR) assert(EXPR)
+    #define vfs_check(EXPR)             assert(EXPR)
 
 #endif // VFS_DISABLE_DEFAULT_ERROR_HANDLING
 

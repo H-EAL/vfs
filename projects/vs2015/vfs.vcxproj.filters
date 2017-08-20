@@ -8,8 +8,8 @@
     <Filter Include="include\_impl">
       <UniqueIdentifier>{103eea97-e0a9-4515-8db4-80a0383ec30a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\_file">
-      <UniqueIdentifier>{a30bf6ab-08b0-4683-a757-52bc86d3c1d3}</UniqueIdentifier>
+    <Filter Include="include\_interface">
+      <UniqueIdentifier>{31453411-beef-4fd8-9bb4-48496b198bc1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -23,9 +23,6 @@
     <ClInclude Include="..\..\include\vfs\platform.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\stream_interface.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\vfs\win_file.hpp">
       <Filter>include\_impl</Filter>
     </ClInclude>
@@ -35,23 +32,41 @@
     <ClInclude Include="..\..\include\vfs\path.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\file.h">
-      <Filter>include\_file</Filter>
+    <ClInclude Include="..\..\include\vfs\win_directory.hpp">
+      <Filter>include\_impl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\file_interface.hpp">
-      <Filter>include\_file</Filter>
+    <ClInclude Include="..\..\include\vfs\directory_interface.hpp">
+      <Filter>include\_interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\file_flags.hpp">
-      <Filter>include\_file</Filter>
+    <ClInclude Include="..\..\include\vfs\directory.hpp">
+      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\file.hpp">
-      <Filter>include\_file</Filter>
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file_flags.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file_interface.hpp">
+      <Filter>include\_interface</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\file_view.hpp">
-      <Filter>include\_file</Filter>
+      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\file_view_interface.hpp">
-      <Filter>include\_file</Filter>
+      <Filter>include\_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\stream_interface.hpp">
+      <Filter>include\_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\watcher_interface.hpp">
+      <Filter>include\_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_watcher.hpp">
+      <Filter>include\_impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\watcher.hpp">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
