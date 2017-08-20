@@ -68,5 +68,8 @@
     <ClInclude Include="..\..\include\vfs\watcher.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\string_utils.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

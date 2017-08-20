@@ -55,16 +55,16 @@ namespace vfs {
         void scan(std::vector<_Dir> &subDirectories, std::vector<path> &files, int32_t recurseToDepth = 0)
         {
             auto findData = WIN32_FIND_DATA{};
-            auto hFile = FindFirstFile(combine(dirPath_, L"*").c_str(), &findData);
+            auto hFile = FindFirstFile(path::combine(dirPath_, path("*")).c_str(), &findData);
 
             do
             {
-                if (findData.cFileName == path(L".") || findData.cFileName == path(L".."))
+                if (findData.cFileName == path(".").str() || findData.cFileName == path("..").str())
                 {
                     continue;
                 }
 
-                const auto &currentFilePath = combine(dirPath_, findData.cFileName);
+                const auto &currentFilePath = path::combine(dirPath_, path(findData.cFileName));
 
                 if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {

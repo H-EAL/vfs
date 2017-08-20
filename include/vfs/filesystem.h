@@ -19,41 +19,6 @@ namespace vizua { namespace filesystem {
         return rc == 0 ? statBuf.st_size : -1;
     }
 
-    inline bool create_path(const std::string &path)
-    {
-        auto folders = split_string(path, "/\\");
-        if (folders.empty())
-        {
-            return false;
-        }
-
-        size_t i = 0;
-        std::string currentPath;
-        if (path[0] == '\\' && path[1] == '\\')
-        {
-            currentPath = "\\\\" + folders[0] + "\\";
-            ++i;
-        }
-        else if (path[1] == ':' && path[2] == '\\')
-        {
-            currentPath = folders[0] + "\\";
-            ++i;
-        }
-
-        for (; i < folders.size(); ++i)
-        {
-            currentPath += folders[i] + "/";
-            if (!exists(currentPath))
-            {
-                if (!create_directory(currentPath))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
 
     inline bool delete_file(const std::string &path)
     {

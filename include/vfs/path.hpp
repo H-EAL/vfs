@@ -1,22 +1,94 @@
 #pragma once
 
-#include <string>
+#include "vfs/string_utils.hpp"
 
 
 namespace vfs {
 
     //----------------------------------------------------------------------------------------------
-    using path = std::wstring;
-
-    //----------------------------------------------------------------------------------------------
-    inline path combine(const path &lhs, const path &rhs)
+    class path
     {
-        if (!lhs.empty() && (lhs[lhs.length()] == L'\\' || lhs[lhs.length()] == L'/'))
+    public:
+        //------------------------------------------------------------------------------------------
+        // If the system is set to Unicode use wide char otherwise use regular char.
+        using string_type       = std::conditional<UNICODE, std::wstring, std::string>::type;
+        using converter_type    = string_converter<string_type>;
+
+    public:
+        //------------------------------------------------------------------------------------------
+        path(const std::string &p)
+            : pathStr_(converter_type::to_native(p))
+        {}
+        //------------------------------------------------------------------------------------------
+        path(const std::wstring &p)
+            : pathStr_(converter_type::to_native(p))
+        {}
+
+    public:
+        //------------------------------------------------------------------------------------------
+        static auto separator()
         {
-            return lhs + rhs;
+            static const auto path_separator = converter_type::to_native("\\");
+            return path_separator;
         }
-        return lhs + L'\\' + rhs;
-    }
+        //------------------------------------------------------------------------------------------
+        static auto separators()
+        {
+            static const auto path_separators = converter_type::to_native("\\/");
+            return path_separators;
+        }
+        //------------------------------------------------------------------------------------------
+        template<typename... _Paths>
+        static path combine(const path &p0, _Paths &&...paths)
+        {
+            return combine_internal(p0, combine(std::forward<_Paths>(paths)...));
+        }
+
+    private:
+        //------------------------------------------------------------------------------------------
+        // End of recursion for the variadic combine function.
+        static path combine(const path &p)
+        {
+            return p;
+        }
+        //------------------------------------------------------------------------------------------
+        // Combines 2 paths together using the system native separator.
+        static path combine_internal(const path &lhs, const path &rhs)
+        {
+            if (!lhs.str().empty())
+            {
+                const auto lastChar = lhs.pathStr_[lhs.str().length() - 1];
+                if (lastChar == '\\' || lastChar == '/')
+                {
+                    // Left hand side path already ends with a path separator.
+                    return lhs.pathStr_ + rhs.pathStr_;
+                }
+                // Left hand side path doesn't end with a path separator.
+                return lhs.pathStr_ + separator() + rhs.str();
+            }
+            // Empty left hand side path.
+            return rhs;
+        }
+
+    public:
+        //------------------------------------------------------------------------------------------
+        // Automatic conversion for string types.
+        operator std::string()  const { return converter_type::to_string(pathStr_);    }
+        operator std::wstring() const { return converter_type::to_wstring(pathStr_);   }
+
+        //------------------------------------------------------------------------------------------
+        // Conversion to native string.
+        const string_type& str() const { return pathStr_; }
+        //------------------------------------------------------------------------------------------
+        // Conversion to C string.
+        const auto c_str() const { return str().c_str(); }
+
+    private:
+        //------------------------------------------------------------------------------------------
+        // String representation of the actual file or directory path.
+        string_type pathStr_;
+    };
+
 
     //----------------------------------------------------------------------------------------------
     inline bool move(const path &src, const path &dst, bool overwrite = false, int32_t maxAttempts = 1)

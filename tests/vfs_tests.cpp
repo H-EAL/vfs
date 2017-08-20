@@ -1,17 +1,7 @@
 #include <iostream>
-#include <codecvt>
-#include <string>
 
 #include "vfs.hpp"
 
-
-//--------------------------------------------------------------------------------------------------
-inline std::string wstring_to_string(const std::wstring &toConvert)
-{
-    using convert_type = std::codecvt_utf8<wchar_t>;
-    static std::wstring_convert<convert_type, wchar_t> converter;
-    return converter.to_bytes(toConvert);
-}
 
 int wmain(int argc, wchar_t *argv[])
 {
@@ -24,11 +14,13 @@ int wmain(int argc, wchar_t *argv[])
 
     if (vfs::directory::exists(filePath))
     {
+        auto p = vfs::path::combine(vfs::path(".\\foo"), vfs::path("bar"), std::string("bah"), std::wstring(L"bdsaah"));
+        vfs::create_path(p);
         auto dir = vfs::directory(filePath);
         dir.scan();
         auto watcher = vfs::watcher(filePath, [](const vfs::path &newDir)
         {
-            std::cout << wstring_to_string(newDir) << std::endl;
+            std::cout << vfs::wstring_to_string(newDir) << std::endl;
         });
         watcher.startWatching(true, true);
         Sleep(60000);
