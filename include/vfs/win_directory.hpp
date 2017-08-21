@@ -35,6 +35,18 @@ namespace vfs {
         }
 
         //------------------------------------------------------------------------------------------
+        static bool delete_directory(const path &dirPath)
+        {
+            if (RemoveDirectory(dirPath.c_str()) == FALSE)
+            {
+                const auto errorCode = GetLastError();
+                vfs_errorf("RemoveDirectory(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+                return false;
+            }
+            return true;
+        }
+
+        //------------------------------------------------------------------------------------------
         template<typename _Dir>
         static void scan(const path &dirPath, std::vector<_Dir> &subDirectories, std::vector<path> &files)
         {

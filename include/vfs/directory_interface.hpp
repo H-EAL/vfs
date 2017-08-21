@@ -32,6 +32,10 @@ namespace vfs {
         {
             return base_type::create_directory(dirPath);
         }
+        static bool delete_directory(const path &dirPath)
+        {
+            return base_type::delete_directory(dirPath);
+        }
 
     public:
         //------------------------------------------------------------------------------------------

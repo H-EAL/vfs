@@ -14,8 +14,24 @@ int wmain(int argc, wchar_t *argv[])
 
     if (vfs::directory::exists(filePath))
     {
-        auto p = vfs::path::combine(vfs::path(".\\foo"), vfs::path("bar"), std::string("bah"), std::wstring(L"bdsaah"));
-        vfs::create_path(p);
+        auto p = vfs::path::combine(vfs::path(".\\foo"), vfs::path("bar"), std::string("bah"), std::wstring(L"bds"));
+        if (vfs::create_path(p))
+        {
+            {
+                vfs::open_read_only(vfs::path(".\\foo\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\bar\\test2.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\bar\\test3.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\bar\\bah\\test4.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\bar\\bah\\test5.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\bar\\bah\\bds\\test6.txt"), vfs::file_creation_options::create_or_overwrite);
+                vfs::open_read_only(vfs::path(".\\foo\\bar\\bah\\bds\\test7.txt"), vfs::file_creation_options::create_or_overwrite);
+            }
+
+            const auto pSrc = vfs::path(".\\foo");
+            const auto pDst = vfs::path("E:\\foo_copy");
+            vfs::move_directory(pSrc, pDst);
+        }
         auto dir = vfs::directory(filePath);
         dir.scan();
         auto watcher = vfs::watcher(filePath, [](const vfs::path &newDir)

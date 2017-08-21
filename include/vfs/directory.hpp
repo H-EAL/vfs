@@ -65,4 +65,62 @@ namespace vfs {
         return true;
     }
 
+    //----------------------------------------------------------------------------------------------
+    inline bool delete_directory(const path &dirPath)
+    {
+        bool success = true;
+        auto dir = directory(dirPath);
+        dir.scan();
+        for (const auto &subDir : dir.getSubDirectories())
+        {
+            success = success && delete_directory(subDir.getPath());
+        }
+//             for (const auto &f : dir.getFiles())
+//             {
+//                 file::delete_file(f);
+//             }
+        return success;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    inline bool move_directory(const path &src, const path &dst)
+    {
+        if (!directory::exists(src))
+        {
+            vfs_errorf("Source directory doesn't exists: %ws", src.c_str());
+            return false;
+        }
+
+        if (directory::exists(dst))
+        {
+            vfs_errorf("Destination directory already exists: %ws", dst.c_str());
+            return false;
+        }
+
+        if (!directory::create_directory(dst))
+        {
+            return false;
+        }
+
+        auto dir = directory(src);
+        dir.scan();
+
+        // Move all files in the new location.
+        for (const auto &srcPath : dir.getFiles())
+        {
+            const auto &dstPath = path::combine(dst, extract_file_name(srcPath));
+            move(srcPath, dstPath);
+        }
+        // Recursively create the sub directories hierarchy.
+        for (auto &d : dir.getSubDirectories())
+        {
+            const auto &srcPath = d.getPath();
+            const auto &dstPath = path::combine(dst, extract_file_name(srcPath));
+            move_directory(srcPath, dstPath);
+        }
+
+        // Delete the source directory (should be empty by now).
+        return delete_directory(src);
+    }
+
 } /*vfs*/
