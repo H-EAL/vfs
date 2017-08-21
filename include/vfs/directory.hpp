@@ -75,6 +75,7 @@ namespace vfs {
         {
             success = success && delete_directory(subDir.getPath());
         }
+        directory::delete_directory(dirPath);
 //             for (const auto &f : dir.getFiles())
 //             {
 //                 file::delete_file(f);
