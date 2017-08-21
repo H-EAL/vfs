@@ -85,6 +85,8 @@ namespace vfs {
             {
                 vfs_errorf("FindNextFile(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
             }
+            
+            FindClose(hFile);
         }
     };
     //----------------------------------------------------------------------------------------------
