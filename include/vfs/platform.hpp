@@ -16,8 +16,13 @@
 #	define VFS_PLATFORM_POSIX	(1)
 #endif
 
-// Cache line size to avoid false sharing
-#define VFS_CACHE_LINE_SIZE    (64)
+// Determine if the platform is using Unicode or not
+#if defined(UNICODE)
+#   define VFS_USE_UNICODE         (1)
+#else
+#   define VFS_USE_UNICODE         (0)
+#endif
+
 
 
 #include "vfs/logging.hpp"

@@ -11,7 +11,7 @@ namespace vfs {
     public:
         //------------------------------------------------------------------------------------------
         // If the system is set to Unicode use wide char otherwise use regular char.
-        using string_type       = std::conditional<UNICODE, std::wstring, std::string>::type;
+        using string_type       = std::conditional<VFS_USE_UNICODE, std::wstring, std::string>::type;
         using converter_type    = string_converter<string_type>;
 
     public:
@@ -47,7 +47,23 @@ namespace vfs {
             static const auto path_separators = converter_type::to_native("\\/");
             return path_separators;
         }
+
+    public:
         //------------------------------------------------------------------------------------------
+        // Automatic conversion for string types.
+        operator std::string()  const { return converter_type::to_string(pathStr_);    }
+        operator std::wstring() const { return converter_type::to_wstring(pathStr_);   }
+
+        //------------------------------------------------------------------------------------------
+        // Conversion to native string.
+        const string_type& str() const { return pathStr_; }
+        //------------------------------------------------------------------------------------------
+        // Conversion to C string.
+        const auto c_str() const { return str().c_str(); }
+
+    public:
+        //------------------------------------------------------------------------------------------
+        // Combines an undetermined amount of paths using the system native separator.
         template<typename... _Paths>
         static path combine(const path &p0, _Paths &&...paths)
         {
@@ -71,27 +87,14 @@ namespace vfs {
                 if (lastChar == '\\' || lastChar == '/')
                 {
                     // Left hand side path already ends with a path separator.
-                    return lhs.pathStr_ + rhs.pathStr_;
+                    return lhs.str() + rhs.str();
                 }
                 // Left hand side path doesn't end with a path separator.
-                return lhs.pathStr_ + separator() + rhs.str();
+                return lhs.str() + separator() + rhs.str();
             }
             // Empty left hand side path.
             return rhs;
         }
-
-    public:
-        //------------------------------------------------------------------------------------------
-        // Automatic conversion for string types.
-        operator std::string()  const { return converter_type::to_string(pathStr_);    }
-        operator std::wstring() const { return converter_type::to_wstring(pathStr_);   }
-
-        //------------------------------------------------------------------------------------------
-        // Conversion to native string.
-        const string_type& str() const { return pathStr_; }
-        //------------------------------------------------------------------------------------------
-        // Conversion to C string.
-        const auto c_str() const { return str().c_str(); }
 
     private:
         //------------------------------------------------------------------------------------------
@@ -101,6 +104,8 @@ namespace vfs {
 
 
     //----------------------------------------------------------------------------------------------
+    // Moves a file or a directory from src path to dst path.
+    // If src path is a directory, src and dst paths must be on the same drive.
     inline bool move(const path &src, const path &dst, bool overwrite = false, int32_t maxAttempts = 1)
     {
         // When moving a file, the destination can be on a different file system or volume.
