@@ -119,7 +119,7 @@ namespace vfs {
             if (!GetFileSizeEx(fileHandle_, PLARGE_INTEGER(&fileSize)))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("SetEndOfFile(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("GetFileSizeEx(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
             }
             return fileSize;
         }
