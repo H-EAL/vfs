@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -11,22 +11,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{EE5E2151-7B06-4638-8AE1-5FC5E259DF3A}</ProjectGuid>
+    <ProjectGuid>{493D16F6-8A85-458B-9EA0-49520EE8A6DD}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>vfstests</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <RootNamespace>vfs</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -61,7 +61,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -77,7 +76,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -87,7 +85,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\tests\vfs_tests.cpp" />
+    <ClInclude Include="..\..\include\vfs.hpp" />
+    <ClInclude Include="..\..\include\vfs\directory.hpp" />
+    <ClInclude Include="..\..\include\vfs\directory_interface.hpp" />
+    <ClInclude Include="..\..\include\vfs\file_interface.hpp" />
+    <ClInclude Include="..\..\include\vfs\file_flags.hpp" />
+    <ClInclude Include="..\..\include\vfs\file.hpp" />
+    <ClInclude Include="..\..\include\vfs\file_view.hpp" />
+    <ClInclude Include="..\..\include\vfs\file_view_interface.hpp" />
+    <ClInclude Include="..\..\include\vfs\logging.hpp" />
+    <ClInclude Include="..\..\include\vfs\path.hpp" />
+    <ClInclude Include="..\..\include\vfs\platform.hpp" />
+    <ClInclude Include="..\..\include\vfs\stream_interface.hpp" />
+    <ClInclude Include="..\..\include\vfs\filesystem.h" />
+    <ClInclude Include="..\..\include\vfs\string_utils.hpp" />
+    <ClInclude Include="..\..\include\vfs\watcher.hpp" />
+    <ClInclude Include="..\..\include\vfs\watcher_interface.hpp" />
+    <ClInclude Include="..\..\include\vfs\win_directory.hpp" />
+    <ClInclude Include="..\..\include\vfs\win_file.hpp" />
+    <ClInclude Include="..\..\include\vfs\win_file_view.hpp" />
+    <ClInclude Include="..\..\include\vfs\win_watcher.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
