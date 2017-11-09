@@ -25,6 +25,10 @@ namespace vfs {
         file_view_interface(file_sptr spFile)
             : file_view_interface(std::move(spFile), 0ull)
         {}
+        //------------------------------------------------------------------------------------------
+        file_view_interface(const path &name, int64_t size, bool openExistent)
+            : base_type(name, size, openExistent)
+        {}
 
         //------------------------------------------------------------------------------------------
         bool isValid() const

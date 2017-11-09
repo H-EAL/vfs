@@ -18,13 +18,25 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         win_file_view(file_sptr spFile, int64_t viewSize)
             : spFile_(std::move(spFile))
+            , name_(spFile_->fileName())
             , fileMappingHandle_(nullptr)
             , pData_(nullptr)
             , pCursor_(nullptr)
             , mappedTotalSize_(viewSize)
         {
 			vfs_check(spFile_->isValid());
-            map(viewSize);
+            map(viewSize, false);
+        }
+
+        //------------------------------------------------------------------------------------------
+        win_file_view(const path &name, int64_t size, bool openExistent)
+            : name_(name)
+            , fileMappingHandle_(nullptr)
+            , pData_(nullptr)
+            , pCursor_(nullptr)
+            , mappedTotalSize_(size)
+        {
+            map(size, openExistent);
         }
 
 		//------------------------------------------------------------------------------------------
@@ -32,17 +44,56 @@ namespace vfs {
         {
             flush();
             unmap();
+
+            if (fileMappingHandle_ != nullptr)
+            {
+                CloseHandle(fileMappingHandle_);
+            }
         }
 
 		//------------------------------------------------------------------------------------------
-        bool map(int64_t viewSize)
+        bool map(int64_t viewSize, bool openExistent)
         {
-			if (!spFile_->createMapping(viewSize))
-			{
-				return false;
-			}
+            const auto access = spFile_ ? spFile_->fileAccess() : file_access::read_write;
 
-            const auto access = spFile_->fileAccess();
+            if (spFile_)
+            {
+                if (!spFile_->createMapping(viewSize))
+                {
+                    return false;
+                }
+
+                fileMappingHandle_  = spFile_->nativeFileMappingHandle();
+                fileTotalSize_      = spFile_->size();
+            }
+            else
+            {
+                if (openExistent)
+                {
+                    fileMappingHandle_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name_.c_str());
+                }
+                else
+                {
+                    fileMappingHandle_ = CreateFileMapping
+                    (
+                        INVALID_HANDLE_VALUE,
+                        nullptr,
+                        PAGE_READWRITE,
+                        DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
+                        name_.c_str()
+                    );
+                }
+
+                if (fileMappingHandle_ == nullptr)
+                {
+                    const auto errorCode = GetLastError();
+                    vfs_errorf("%sFileMapping(%ws) failed with error: %s", openExistent ? "Open" : "Create", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                    return false;
+                }
+
+                fileTotalSize_ = viewSize;
+            }
+
             const auto fileMapAccess = (
                 (access == file_access::read_only)
                 ? FILE_MAP_READ
@@ -52,13 +103,13 @@ namespace vfs {
                 )
             );
 
-            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(spFile_->nativeFileMappingHandle(), fileMapAccess, 0, 0, 0));
+            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(fileMappingHandle_, fileMapAccess, 0, 0, 0));
             pCursor_ = pData_;
 
             if (pData_ == nullptr)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("MapViewOfFile(%ws) failed with error: %s", spFile_->fileName().c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("MapViewOfFile(%ws) failed with error: %s", name_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
 
@@ -68,8 +119,6 @@ namespace vfs {
             {
                 mappedTotalSize_ = memInfo.RegionSize;
             }
-
-            fileTotalSize_ = spFile_->size();
 
             return true;
         }
@@ -170,6 +219,7 @@ namespace vfs {
 	private:
 		//------------------------------------------------------------------------------------------
         file_sptr   spFile_;
+        path        name_;
         HANDLE      fileMappingHandle_;
         uint8_t     *pData_;
         uint8_t     *pCursor_;

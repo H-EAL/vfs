@@ -14,9 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\vfs.hpp" />
-    <ClInclude Include="..\..\include\vfs\filesystem.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\vfs\logging.hpp">
       <Filter>include</Filter>
     </ClInclude>
@@ -69,6 +66,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\string_utils.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\shared_memory.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
