@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vfs/platform.hpp"
-#include "vfs/file.h"
 
 
 namespace vfs {
