@@ -44,7 +44,7 @@ namespace vfs {
             flush();
             unmap();
 
-            if (fileMappingHandle_ != nullptr)
+            if (spFile_)
             {
                 CloseHandle(fileMappingHandle_);
             }
