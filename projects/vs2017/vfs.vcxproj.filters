@@ -71,5 +71,8 @@
     <ClInclude Include="..\..\include\vfs\shared_memory.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\virtual_array.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

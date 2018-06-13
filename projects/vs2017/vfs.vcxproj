@@ -99,6 +99,7 @@
     <ClInclude Include="..\..\include\vfs\shared_memory.hpp" />
     <ClInclude Include="..\..\include\vfs\stream_interface.hpp" />
     <ClInclude Include="..\..\include\vfs\string_utils.hpp" />
+    <ClInclude Include="..\..\include\vfs\virtual_array.hpp" />
     <ClInclude Include="..\..\include\vfs\watcher.hpp" />
     <ClInclude Include="..\..\include\vfs\watcher_interface.hpp" />
     <ClInclude Include="..\..\include\vfs\win_directory.hpp" />

@@ -3,3 +3,4 @@
 temp/
 projects/vs2017/.vs/
 bin/
+*.user
