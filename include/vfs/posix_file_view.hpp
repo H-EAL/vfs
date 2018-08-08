@@ -1,24 +1,27 @@
 #pragma once
 
+#include <cstring>
+#include <sys/mman.h>
+
 #include "vfs/platform.hpp"
 
 
 namespace vfs {
 
     //----------------------------------------------------------------------------------------------
-    using file_view_impl = class win_file_view;
+    using file_view_impl = class posix_file_view;
     //----------------------------------------------------------------------------------------------
 
 
     //----------------------------------------------------------------------------------------------
-    class win_file_view
+    class posix_file_view
     {
 	protected:
 		//------------------------------------------------------------------------------------------
-        win_file_view(file_sptr spFile, int64_t viewSize)
+        posix_file_view(file_sptr spFile, int64_t viewSize)
             : spFile_(std::move(spFile))
             , name_(spFile_->fileName())
-            , fileMappingHandle_(nullptr)
+            //, fileMappingHandle_(nullptr)
             , pData_(nullptr)
             , pCursor_(nullptr)
             , mappedTotalSize_(viewSize)
@@ -28,9 +31,9 @@ namespace vfs {
         }
 
         //------------------------------------------------------------------------------------------
-        win_file_view(const path &name, int64_t size, bool openExisting)
+        posix_file_view(const path &name, int64_t size, bool openExisting)
             : name_(name)
-            , fileMappingHandle_(nullptr)
+            //, fileMappingHandle_(nullptr)
             , pData_(nullptr)
             , pCursor_(nullptr)
             , mappedTotalSize_(size)
@@ -39,15 +42,17 @@ namespace vfs {
         }
 
 		//------------------------------------------------------------------------------------------
-        ~win_file_view()
+        ~posix_file_view()
         {
             flush();
             unmap();
 
+            /*
             if (spFile_ == nullptr)
             {
                 CloseHandle(fileMappingHandle_);
             }
+            */
         }
 
 		//------------------------------------------------------------------------------------------
@@ -62,11 +67,13 @@ namespace vfs {
                     return false;
                 }
 
-                fileMappingHandle_  = spFile_->nativeFileMappingHandle();
-                fileTotalSize_      = spFile_->size();
+                //fileMappingHandle_  = spFile_->nativeFileMappingHandle();
+                fileTotalSize_ = spFile_->size();
             }
             else
             {
+                vfs_check(false);
+                /*
                 if (openExisting)
                 {
                     fileMappingHandle_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name_.c_str());
@@ -91,32 +98,25 @@ namespace vfs {
                 }
 
                 fileTotalSize_ = viewSize;
+                */
             }
 
             const auto fileMapAccess = (
                 (access == file_access::read_only)
-                ? FILE_MAP_READ
+                ? PROT_READ
                 : ((access == file_access::write_only)
-                    ? FILE_MAP_WRITE
-                    : FILE_MAP_ALL_ACCESS
+                    ? PROT_WRITE
+                    : PROT_READ | PROT_WRITE
                 )
             );
 
-            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(fileMappingHandle_, fileMapAccess, 0, 0, 0));
+            pData_ = reinterpret_cast<uint8_t*>(mmap(nullptr, fileTotalSize_, fileMapAccess, MAP_PRIVATE, spFile_->nativeHandle(), 0));
             pCursor_ = pData_;
 
-            if (pData_ == nullptr)
+            if (pData_ == MAP_FAILED)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("MapViewOfFile(%ws) failed with error: %s", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("mmap(%s) failed with error: %d", name_.c_str(), errno);
                 return false;
-            }
-
-            MEMORY_BASIC_INFORMATION memInfo;
-            const auto dwInfoBytesCount = VirtualQuery(pData_, &memInfo, sizeof(memInfo));
-            if (dwInfoBytesCount != 0)
-            {
-                mappedTotalSize_ = memInfo.RegionSize;
             }
 
             return true;
@@ -125,20 +125,23 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         bool unmap()
         {
-            if (pData_ && !UnmapViewOfFile(pData_))
+            if (pData_ && munmap(pData_, fileTotalSize_) == -1)
             {
                 return false;
             }
+            
             return true;
         }
 
 		//------------------------------------------------------------------------------------------
         bool flush()
         {
+            /*
             if (!FlushViewOfFile(pData_, 0))
             {
                 return false;
             }
+            */
             return true;
         }
 
@@ -219,7 +222,7 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         file_sptr   spFile_;
         path        name_;
-        HANDLE      fileMappingHandle_;
+        //HANDLE      fileMappingHandle_;
         uint8_t     *pData_;
         uint8_t     *pCursor_;
         int64_t     fileTotalSize_;

@@ -7,8 +7,10 @@
 // Platform specific implementations
 #if VFS_PLATFORM_WIN
 #	include "vfs/win_watcher.hpp"
+#elif VFS_PLATFORM_POSIX
+#   include "vfs/posix_watcher.hpp"
 #else
-#	error No directory implementation defined for the current platform
+#	error No watcher implementation defined for the current platform
 #endif
 
 

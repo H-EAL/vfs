@@ -26,8 +26,8 @@ namespace vfs {
             : file_view_interface(std::move(spFile), 0ull)
         {}
         //------------------------------------------------------------------------------------------
-        file_view_interface(const path &name, int64_t size, bool openExistent)
-            : base_type(name, size, openExistent)
+        file_view_interface(const path &name, int64_t size, bool openExisting)
+            : base_type(name, size, openExisting)
         {}
 
         //------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ namespace vfs {
         template<typename T = uint8_t>
         auto cursor()
         {
-            return base_type::cursor<T>();
+            return base_type::template cursor<T>();
         }
         //------------------------------------------------------------------------------------------
         uint8_t* cursor()

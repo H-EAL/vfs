@@ -3,22 +3,22 @@
 #include "vfs/platform.hpp"
 #include "vfs/file_flags.hpp"
 #include "vfs/path.hpp"
-#include "vfs/win_move.hpp"
+#include "vfs/posix_move.hpp"
 
 
 namespace vfs {
 
     //----------------------------------------------------------------------------------------------
-    using file_impl = class win_file;
+    using file_impl = class posix_file;
     //----------------------------------------------------------------------------------------------
 
 
     //----------------------------------------------------------------------------------------------
-    class win_file
-        : public win_move
+    class posix_file
+        : public posix_move
     {
     protected:
-        using native_handle = HANDLE;
+        using native_handle = int32_t;
 
     protected:
         native_handle nativeHandle() const
@@ -28,7 +28,7 @@ namespace vfs {
 
         native_handle nativeFileMappingHandle() const
         {
-            return fileMappingHandle_;
+            return 0;// fileMappingHandle_;
         }
 
         const path& fileName() const
@@ -42,7 +42,7 @@ namespace vfs {
         }
 
     protected:
-        win_file
+        posix_file
         (
             const path              &name,
             file_access             access,
@@ -51,36 +51,30 @@ namespace vfs {
             file_attributes         attributes
         )
             : fileName_(name)
-            , fileHandle_(INVALID_HANDLE_VALUE)
-            , fileMappingHandle_(nullptr)
+            , fileHandle_(-1)
+            //, fileMappingHandle_(nullptr)
             , fileAccess_(access)
         {
-            fileHandle_ = CreateFile
+            fileHandle_ = ::open
             (
                 // File name
                 fileName_.c_str(),
                 // Access
-                win_file_access(access),
-                // TODO: Add shared access
-                win_file_share_mode(file_share_mode::read),
-                // Security attributes
-                nullptr,
-                // Creation options
-                win_file_creation_options(creationOption),
-                // Flags and attributes
-                win_file_flags(flags) | win_file_attributes(attributes),
-                // Template file
-                nullptr
+                posix_file_access(access)                     | 
+                posix_file_share_mode(file_share_mode::read)  |
+                posix_file_creation_options(creationOption)   |
+                posix_file_flags(flags)                       |
+                posix_file_attributes(attributes)
             );
 
-            if (fileHandle_ == INVALID_HANDLE_VALUE)
+            if (fileHandle_  == -1)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("CreateFile(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                const auto errorCode = errno;
+                vfs_errorf("open(%ws) failed with error: %d", fileName_.c_str(), errorCode);
             }
         }
 
-        ~win_file()
+        ~posix_file()
         {
             close();
         }
@@ -88,19 +82,21 @@ namespace vfs {
     protected:
         static bool exists(const path &filePath)
         {
-            const auto dwAttrib = GetFileAttributes(filePath.c_str());
-            return (dwAttrib != INVALID_FILE_ATTRIBUTES) && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+            struct stat st{};
+            stat(filePath.c_str(), &st);
+            return (st.st_mode & S_IFMT) == S_IFREG;
         }
 
     protected:
         bool isValid() const
         {
-            return fileHandle_ != INVALID_HANDLE_VALUE;
+            return fileHandle_ >= 0;
         }
 
         bool isMapped() const
         {
-            return fileMappingHandle_ != nullptr;
+            //return fileMappingHandle_ != nullptr;
+            return false;
         }
 
         void close()
@@ -108,26 +104,22 @@ namespace vfs {
             closeMapping();
             if (isValid())
             {
-                CloseHandle(fileHandle_);
-                fileHandle_ = INVALID_HANDLE_VALUE;
+                ::close(fileHandle_);
+                fileHandle_ = -1;
             }
         }
 
         int64_t size() const
         {
             vfs_check(isValid());
-
-            int64_t fileSize = 0;
-            if (!GetFileSizeEx(fileHandle_, PLARGE_INTEGER(&fileSize)))
-            {
-                const auto errorCode = GetLastError();
-                vfs_errorf("GetFileSizeEx(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
-            }
-            return fileSize;
+            struct stat st;
+            stat(fileName_.c_str(), &st);
+            return st.st_size;
         }
 
         bool resize()
         {
+            /*
             vfs_check(isValid());
 
             if (!SetEndOfFile(fileHandle_))
@@ -136,13 +128,14 @@ namespace vfs {
                 vfs_errorf("SetEndOfFile(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
+            */
             return true;
         }
 
         bool skip(int64_t offset)
         {
             vfs_check(isValid());
-
+            /*
             auto liDistanceToMove = LARGE_INTEGER{};
             liDistanceToMove.QuadPart = offset;
             if (!SetFilePointerEx(fileHandle_, liDistanceToMove, nullptr, FILE_CURRENT))
@@ -151,6 +144,7 @@ namespace vfs {
                 vfs_errorf("SetFilePointerEx(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
+            */
             return true;
         }
 
@@ -158,12 +152,14 @@ namespace vfs {
         {
             vfs_check(isValid());
 
-            auto numberOfBytesRead = DWORD{ 0 };
+            auto numberOfBytesRead = int64_t{ 0 };
+            /*
             if (!ReadFile(fileHandle_, (LPVOID)dst, DWORD(sizeInBytes), &numberOfBytesRead, nullptr))
             {
                 const auto errorCode = GetLastError();
                 vfs_errorf("ReadFile(%ws, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
             }
+            */
             return numberOfBytesRead;
         }
 
@@ -171,17 +167,20 @@ namespace vfs {
         {
             vfs_check(isValid());
 
-            auto numberOfBytesWritten = DWORD{ 0 };
+            auto numberOfBytesWritten = int64_t{ 0 };
+            /*
             if (!WriteFile(fileHandle_, (LPCVOID)src, DWORD(sizeInBytes), &numberOfBytesWritten, nullptr))
             {
                 const auto errorCode = GetLastError();
                 vfs_errorf("WriteFile(%ws, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
             }
+            */
             return numberOfBytesWritten;
         }
 
         bool createMapping(int64_t viewSize)
         {
+            /*/
             const auto protect = DWORD((fileAccess_ == file_access::read_only) ? PAGE_READONLY : PAGE_READWRITE);
             fileMappingHandle_ = CreateFileMapping
             (
@@ -203,41 +202,44 @@ namespace vfs {
                 vfs_errorf("CreateFileMapping(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
-
+            */
             return true;
         }
 
         void closeMapping()
         {
+            /*
             if (isMapped())
             {
                 CloseHandle(fileMappingHandle_);
                 fileMappingHandle_ = nullptr;
             }
+            */
         }
 
     private:
-        path        fileName_;
-        HANDLE      fileHandle_;
-        HANDLE      fileMappingHandle_;
-        file_access fileAccess_;
+        path            fileName_;
+        native_handle   fileHandle_;
+        //HANDLE          fileMappingHandle_;
+        file_access     fileAccess_;
 
     private:
-        static DWORD win_file_access(file_access access)
+        static int32_t posix_file_access(file_access access)
         {
             switch (access)
             {
-            case file_access::read_only: return GENERIC_READ;
-            case file_access::write_only: return GENERIC_WRITE;
-            case file_access::read_write: return GENERIC_READ | GENERIC_WRITE;
+            case file_access::read_only:    return O_RDONLY;
+            case file_access::write_only:   return O_WRONLY;
+            case file_access::read_write:   return O_RDWR;
             }
 
             vfs_check(false);
             return 0;
 		}
 
-		static DWORD win_file_share_mode(file_share_mode shareMode)
+		static int32_t posix_file_share_mode(file_share_mode shareMode)
 		{
+            /*
 			switch (shareMode)
 			{
 			case file_share_mode::exclusive:	return 0;
@@ -247,47 +249,49 @@ namespace vfs {
 			}
 
 			vfs_check(false);
+            */
 			return 0;
 		}
 
-        static DWORD win_file_creation_options(file_creation_options creationOption)
+        static int32_t posix_file_creation_options(file_creation_options creationOption)
         {
             switch (creationOption)
             {
-            case file_creation_options::create_if_nonexisting: return CREATE_NEW;
-            case file_creation_options::create_or_overwrite: return CREATE_ALWAYS;
-            case file_creation_options::open_if_existing: return OPEN_EXISTING;
-            case file_creation_options::open_or_create: return OPEN_ALWAYS;
-            case file_creation_options::truncate_existing: return TRUNCATE_EXISTING;
+            case file_creation_options::create_if_nonexisting:  return O_CREAT | O_EXCL;
+            case file_creation_options::create_or_overwrite:    return O_CREAT | O_TRUNC;
+            case file_creation_options::open_if_existing:       return O_APPEND;
+            case file_creation_options::open_or_create:         return O_CREAT | O_APPEND;
+            case file_creation_options::truncate_existing:      return O_TRUNC;
             }
 
             vfs_check(false);
             return 0;
         }
 
-        static DWORD win_file_flags(file_flags flags)
+        static int32_t posix_file_flags(file_flags flags)
         {
-            auto f = DWORD{ 0 };
-
+            auto f = int32_t{ 0 };
+            /*
             if (uint32_t(flags) & uint32_t(file_flags::delete_on_close))
                 f |= FILE_FLAG_DELETE_ON_CLOSE;
 
             if (uint32_t(flags) & uint32_t(file_flags::sequential_scan))
                 f |= FILE_FLAG_SEQUENTIAL_SCAN;
-
+            */
             return f;
         }
 
-        static DWORD win_file_attributes(file_attributes attributes)
+        static int32_t posix_file_attributes(file_attributes attributes)
         {
-            auto attr = DWORD{ 0 };
+            auto attr = int32_t{ 0 };
 
+            /*
             if (uint32_t(attributes) & uint32_t(file_attributes::normal))
                 attr |= FILE_ATTRIBUTE_NORMAL;
 
             if (uint32_t(attributes) & uint32_t(file_attributes::temporary))
                 attr |= FILE_ATTRIBUTE_TEMPORARY;
-
+            */
             return attr;
         }
     };

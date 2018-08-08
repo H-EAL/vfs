@@ -8,6 +8,8 @@
 // Platform specific implementations
 #if VFS_PLATFORM_WIN
 #	include "vfs/win_file.hpp"
+#elif VFS_PLATFORM_POSIX
+#   include "vfs/posix_file.hpp"
 #else
 #	error No file implementation defined for the current platform
 #endif

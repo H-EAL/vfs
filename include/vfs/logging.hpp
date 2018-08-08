@@ -8,16 +8,16 @@
 
 #ifndef VFS_DISABLE_DEFAULT_ERROR_HANDLING
 
-    #define vfs_infof(MSG, ...)         fprintf(stderr, "[ info     ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_infof(MSG, ...)         fprintf(stderr, "[ info     ] "  MSG  "\n", __VA_ARGS__)
     #define vfs_info(MSG)               vfs_infof(MSG,)
 
-    #define vfs_warningf(MSG, ...)      fprintf(stderr, "[ warning  ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_warningf(MSG, ...)      fprintf(stderr, "[ warning  ] "  MSG  "\n", __VA_ARGS__)
     #define vfs_warning(MSG)            vfs_warningf(MSG,)
 
-    #define vfs_errorf(MSG, ...)        fprintf(stderr, "[ error    ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_errorf(MSG, ...)        fprintf(stderr, "[ error    ] "  MSG  "\n", __VA_ARGS__)
     #define vfs_error(MSG)              vfs_errorf(MSG,)
 
-    #define vfs_criticalf(MSG, ...)     fprintf(stderr, "[ critical ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_criticalf(MSG, ...)     fprintf(stderr, "[ critical ] "  MSG  "\n", __VA_ARGS__)
     #define vfs_critical(MSG)           vfs_criticalf(MSG,)
 
     #define vfs_check(EXPR)             assert(EXPR)
@@ -25,7 +25,7 @@
 #endif // VFS_DISABLE_DEFAULT_ERROR_HANDLING
 
 
-#if defined(VFS_PLATFORM_WIN)
+#if VFS_PLATFORM_WIN
 
     //----------------------------------------------------------------------------------------------
     // Returns the last Win32 error, in string format. Returns an empty string if there is no error.

@@ -7,6 +7,8 @@
 // Platform specific implementations
 #if VFS_PLATFORM_WIN
 #	include "vfs/win_file_view.hpp"
+#elif VFS_PLATFORM_POSIX
+#   include "vfs/posix_file_view.hpp"
 #else
 #	error No file_view implementation defined for the current platform
 #endif

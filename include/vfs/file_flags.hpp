@@ -7,9 +7,9 @@ namespace vfs {
 
     enum class file_creation_options
     {
-        create_if_nonexistant,
+        create_if_nonexisting,
         create_or_overwrite,
-        open_if_existant,
+        open_if_existing,
         open_or_create,
         truncate_existing
     };
