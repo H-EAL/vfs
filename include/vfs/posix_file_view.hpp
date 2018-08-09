@@ -68,7 +68,13 @@ namespace vfs {
                 }
 
                 //fileMappingHandle_  = spFile_->nativeFileMappingHandle();
-                fileTotalSize_ = spFile_->size();
+                const auto currentFileSize = spFile_->size();
+                fileTotalSize_ = viewSize == 0 ? currentFileSize : viewSize;
+                
+                if (currentFileSize < viewSize)
+                {
+                    spFile_->resize(viewSize);
+                }
             }
             else
             {

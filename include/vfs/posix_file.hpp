@@ -122,11 +122,11 @@ namespace vfs {
             return st.st_size;
         }
 
-        bool resize()
+        bool resize(int64_t newSize)
         {
             vfs_check(isValid());
             
-            const auto result = ftruncate64(fileHandle_, 0);
+            const auto result = ftruncate64(fileHandle_, newSize);
 
             if (result == -1)
             {
@@ -145,7 +145,7 @@ namespace vfs {
             
             if (resultOffset == -1)
             {
-                vfs_errorf("lseek64(%s, %d) failed with error: %s", fileName_.c_str(), offset, get_last_error_as_string(errno).c_str());
+                vfs_errorf("lseek64(%s, %ld) failed with error: %s", fileName_.c_str(), offset, get_last_error_as_string(errno).c_str());
                 return false;
             }
             
@@ -160,7 +160,7 @@ namespace vfs {
             
             if (numberOfBytesRead == -1)
             {
-                vfs_errorf("::read(%s, %d) failed with error: %s", fileName_.c_str(), sizeInBytes, get_last_error_as_string(errno).c_str());
+                vfs_errorf("::read(%s, %ld) failed with error: %s", fileName_.c_str(), sizeInBytes, get_last_error_as_string(errno).c_str());
                 return 0;
             }
             
@@ -175,7 +175,7 @@ namespace vfs {
             
             if (numberOfBytesWritten == -1)
             {
-                vfs_errorf("::write(%s, %d) failed with error: %s", fileName_.c_str(), sizeInBytes, get_last_error_as_string(errno).c_str());
+                vfs_errorf("::write(%s, %ld) failed with error: %s", fileName_.c_str(), sizeInBytes, get_last_error_as_string(errno).c_str());
                 return 0;
             }
             

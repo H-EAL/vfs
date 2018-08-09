@@ -8,7 +8,7 @@
 
 
 namespace vfs {
-
+    
     //----------------------------------------------------------------------------------------------
     template<typename T, uint32_t _MaxElementCount>
     class virtual_array
@@ -160,9 +160,8 @@ namespace vfs {
                     }
                 }
             }
-
-            VirtualFree(pArray_, 0, MEM_RELEASE);
-            VirtualFree(pControlRegister_, 0, MEM_RELEASE);
+            
+            deallocate();
             pArray_ = nullptr;
             pControlRegister_ = nullptr;
         }
@@ -242,11 +241,45 @@ namespace vfs {
 
     private:
         //------------------------------------------------------------------------------------------
+        void* reserve(int64_t size)
+        {
+        #if FTL_PLATFORM_WIN
+            return VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE));
+        #elif FTL_PLATFORM_POSIX
+            return mmap(nullptr, size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        #endif
+        }
+        
+        //------------------------------------------------------------------------------------------
+        void* commit(void *pAddr, int64_t size)
+        {
+        #if FTL_PLATFORM_WIN
+            return VirtualAlloc(pAddr, size, MEM_COMMIT, PAGE_READWRITE);
+        #elif FTL_PLATFORM_POSIX
+            return mprotect(pAddr, size, PROT_READ | PROT_WRITE) == 0 ? pAddr : nullptr;
+        #endif 
+        }
+        
+        //------------------------------------------------------------------------------------------
+        void deallocate()
+        {
+        #if FTL_PLATFORM_WIN
+            VirtualFree(pArray_, 0, MEM_RELEASE);
+            VirtualFree(pControlRegister_, 0, MEM_RELEASE);
+        #elif FTL_PLATFORM_POSIX
+            munmap(pArray_, 0);
+            munmap(pControlRegister_, 0);
+        #endif
+        }
+    
+        //------------------------------------------------------------------------------------------
         void init()
         {
-            pArray_ = reinterpret_cast<T*>(VirtualAlloc(nullptr, _MaxElementCount * sizeof(T), MEM_RESERVE, PAGE_READWRITE));
+            const auto ps = getpagesize();
+            printf("%d", ps);
+            pArray_ = reinterpret_cast<T*>(reserve(_MaxElementCount * sizeof(T)));
             vfs_check(pArray_ != nullptr);
-            pControlRegister_ = reinterpret_cast<std::atomic<uint64_t>*>(VirtualAlloc(nullptr, _MaxElementCount / sizeof(uint64_t), MEM_RESERVE, PAGE_READWRITE));
+            pControlRegister_ = reinterpret_cast<std::atomic<uint64_t>*>(reserve(_MaxElementCount / sizeof(uint64_t)));
             vfs_check(pControlRegister_ != nullptr);
             grow(1);
         }
@@ -278,14 +311,14 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void grow(uint32_t pageCount)
         {
-            auto pData = VirtualAlloc(reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size, pageCount * page_size, MEM_COMMIT, PAGE_READWRITE);
+            auto pData = commit(reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size, pageCount * page_size);
             vfs_check(pData != nullptr);
             pageCount_ += pageCount;
 
             const auto neededControlRegisterPageCount = uint32_t(elements_per_page * pageCount_ / control_bits_per_page) + 1 - controlRegisterPageCount_;
             if (neededControlRegisterPageCount > 0)
             {
-                auto pData = VirtualAlloc(reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size, neededControlRegisterPageCount * page_size, MEM_COMMIT, PAGE_READWRITE);
+                auto pData = commit(reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size, neededControlRegisterPageCount * page_size);
                 vfs_check(pData != nullptr);
                 controlRegisterPageCount_ += neededControlRegisterPageCount;
             }
@@ -373,5 +406,5 @@ namespace vfs {
         uint32_t                controlRegisterPageCount_;
         std::atomic<uint32_t>   nextFreeIndex_;
     };
-
+    
 } /*ftl*/
