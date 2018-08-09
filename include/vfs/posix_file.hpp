@@ -28,7 +28,7 @@ namespace vfs {
 
         native_handle nativeFileMappingHandle() const
         {
-            return 0;// fileMappingHandle_;
+            return -1;// fileMappingHandle_;
         }
 
         const path& fileName() const
@@ -55,22 +55,27 @@ namespace vfs {
             //, fileMappingHandle_(nullptr)
             , fileAccess_(access)
         {
+            const auto _flags =
+                posix_file_access(access)                     | 
+                posix_file_share_mode(file_share_mode::read)  |
+                posix_file_creation_options(creationOption)   |
+                posix_file_flags(flags)                       |
+                posix_file_attributes(attributes);
+            
             fileHandle_ = ::open
             (
                 // File name
                 fileName_.c_str(),
                 // Access
-                posix_file_access(access)                     | 
-                posix_file_share_mode(file_share_mode::read)  |
-                posix_file_creation_options(creationOption)   |
-                posix_file_flags(flags)                       |
-                posix_file_attributes(attributes)
+                _flags,
+                // Creation mode
+                S_IRWXU | S_IRWXG | S_IRWXO
             );
 
             if (fileHandle_  == -1)
             {
                 const auto errorCode = errno;
-                vfs_errorf("open(%ws) failed with error: %d", fileName_.c_str(), errorCode);
+                vfs_errorf("open(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
             }
         }
 
@@ -119,32 +124,31 @@ namespace vfs {
 
         bool resize()
         {
-            /*
             vfs_check(isValid());
+            
+            const auto result = ftruncate64(fileHandle_, 0);
 
-            if (!SetEndOfFile(fileHandle_))
+            if (result == -1)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("SetEndOfFile(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("ftruncate(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errno).c_str());
                 return false;
             }
-            */
+            
             return true;
         }
 
         bool skip(int64_t offset)
         {
             vfs_check(isValid());
-            /*
-            auto liDistanceToMove = LARGE_INTEGER{};
-            liDistanceToMove.QuadPart = offset;
-            if (!SetFilePointerEx(fileHandle_, liDistanceToMove, nullptr, FILE_CURRENT))
+            
+            const auto resultOffset = lseek64(fileHandle_, offset, SEEK_CUR);
+            
+            if (resultOffset == -1)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("SetFilePointerEx(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("lseek64(%s, %d) failed with error: %s", fileName_.c_str(), offset, get_last_error_as_string(errno).c_str());
                 return false;
             }
-            */
+            
             return true;
         }
 
@@ -152,14 +156,14 @@ namespace vfs {
         {
             vfs_check(isValid());
 
-            auto numberOfBytesRead = int64_t{ 0 };
-            /*
-            if (!ReadFile(fileHandle_, (LPVOID)dst, DWORD(sizeInBytes), &numberOfBytesRead, nullptr))
+            const auto numberOfBytesRead = ::read(fileHandle_, dst, sizeInBytes);
+            
+            if (numberOfBytesRead == -1)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("ReadFile(%ws, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("::read(%s, %d) failed with error: %s", fileName_.c_str(), sizeInBytes, get_last_error_as_string(errno).c_str());
+                return 0;
             }
-            */
+            
             return numberOfBytesRead;
         }
 
@@ -167,14 +171,14 @@ namespace vfs {
         {
             vfs_check(isValid());
 
-            auto numberOfBytesWritten = int64_t{ 0 };
-            /*
-            if (!WriteFile(fileHandle_, (LPCVOID)src, DWORD(sizeInBytes), &numberOfBytesWritten, nullptr))
+            const auto numberOfBytesWritten = ::write(fileHandle_, src, sizeInBytes);
+            
+            if (numberOfBytesWritten == -1)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("WriteFile(%ws, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("::write(%s, %d) failed with error: %s", fileName_.c_str(), sizeInBytes, get_last_error_as_string(errno).c_str());
+                return 0;
             }
-            */
+            
             return numberOfBytesWritten;
         }
 
@@ -288,10 +292,10 @@ namespace vfs {
             /*
             if (uint32_t(attributes) & uint32_t(file_attributes::normal))
                 attr |= FILE_ATTRIBUTE_NORMAL;
-
-            if (uint32_t(attributes) & uint32_t(file_attributes::temporary))
-                attr |= FILE_ATTRIBUTE_TEMPORARY;
             */
+            if (uint32_t(attributes) & uint32_t(file_attributes::temporary))
+                attr |= O_TMPFILE;
+            
             return attr;
         }
     };

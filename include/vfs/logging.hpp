@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstring>
 #include <cassert>
 
 #include "vfs/platform.hpp"
@@ -47,6 +48,22 @@
 
         return message;
     }
-    //----------------------------------------------------------------------------------------------
+    
+#elif VFS_PLATFORM_POSIX
 
-#endif // defined(VFS_PLATFORM_WIN) && !defined(VFS_DISABLE_SAFE_WIN_CALLS)
+    //----------------------------------------------------------------------------------------------
+    inline std::string get_last_error_as_string(int errorCode)
+    {
+        auto message = std::string{};
+        
+        if (errorCode != 0)
+        {
+            constexpr auto MESSAGE_LENGTH = 1024;
+            message.resize(MESSAGE_LENGTH);
+            strerror_r(errorCode, &message[0], MESSAGE_LENGTH);
+        }
+        
+        return message;
+    }
+
+#endif

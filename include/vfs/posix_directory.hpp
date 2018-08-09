@@ -32,7 +32,7 @@ namespace vfs {
             
             if (errorCode != 0)
             {
-                vfs_errorf("mkdir(%ws) returned error code: %d", dirPath.c_str(), errorCode);
+                vfs_errorf("mkdir(%s) returned error code: %d", dirPath.c_str(), errorCode);
                 return false;
             }
 
@@ -46,7 +46,7 @@ namespace vfs {
 
             if (errorCode != 0)
             {
-                vfs_errorf("rmdir(%ws) returned error code: %d", dirPath.c_str(), errorCode);
+                vfs_errorf("rmdir(%s) returned error code: %d", dirPath.c_str(), errorCode);
                 return false;
             }
 

@@ -115,7 +115,7 @@ namespace vfs {
 
             if (pData_ == MAP_FAILED)
             {
-                vfs_errorf("mmap(%s) failed with error: %d", name_.c_str(), errno);
+                vfs_errorf("mmap(%s) failed with error: %s", name_.c_str(), get_last_error_as_string(errno).c_str());
                 return false;
             }
 

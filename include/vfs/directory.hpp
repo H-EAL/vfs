@@ -90,13 +90,13 @@ namespace vfs {
     {
         if (!directory::exists(src))
         {
-            vfs_errorf("Source directory doesn't exists: %ws", src.c_str());
+            vfs_errorf("Source directory doesn't exists: %s", src.c_str());
             return false;
         }
 
         if (directory::exists(dst))
         {
-            vfs_errorf("Destination directory already exists: %ws", dst.c_str());
+            vfs_errorf("Destination directory already exists: %s", dst.c_str());
             return false;
         }
 
