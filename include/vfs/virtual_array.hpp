@@ -275,8 +275,6 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void init()
         {
-            const auto ps = getpagesize();
-            printf("%d", ps);
             pArray_ = reinterpret_cast<T*>(reserve(_MaxElementCount * sizeof(T)));
             vfs_check(pArray_ != nullptr);
             pControlRegister_ = reinterpret_cast<std::atomic<uint64_t>*>(reserve(_MaxElementCount / sizeof(uint64_t)));
@@ -312,6 +310,7 @@ namespace vfs {
         void grow(uint32_t pageCount)
         {
             auto pData = commit(reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size, pageCount * page_size);
+            (void)pData;
             vfs_check(pData != nullptr);
             pageCount_ += pageCount;
 
@@ -319,6 +318,7 @@ namespace vfs {
             if (neededControlRegisterPageCount > 0)
             {
                 auto pData = commit(reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size, neededControlRegisterPageCount * page_size);
+                (void)pData;
                 vfs_check(pData != nullptr);
                 controlRegisterPageCount_ += neededControlRegisterPageCount;
             }
@@ -368,6 +368,7 @@ namespace vfs {
             } while (!nextFreeIndex_.compare_exchange_strong(expectedNextFreeIndex, freeIndex, std::memory_order_acq_rel));
 
             auto i = nextFreeIndex_.load();
+            (void)i;
             vfs_check(i < lastValidIndex_ || i == invalid_index);
         }
 
@@ -390,6 +391,7 @@ namespace vfs {
                 }
 
                 auto i = nextFreeIndex_.load();
+                (void)i;
                 vfs_check(i < lastValidIndex_ || i == invalid_index);
             }
             return freeIndex;
