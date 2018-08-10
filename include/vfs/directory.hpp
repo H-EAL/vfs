@@ -33,10 +33,15 @@ namespace vfs {
 
         size_t i = 0;
         std::string currentPath;
-        const auto pathStr = p.str();
+        const auto &pathStr = p.str();
+        // Test for absolute paths.
+        if ((pathStr.length() >= 1) && pathStr[0] == '/')
+        {
+            currentPath = "/";
+        }
         // Test for remote location.
         // Those will look like \\foo\bar\ where foo is the remote computer.
-        if ((pathStr.length() >= 2) && pathStr[0] == '\\' && pathStr[1] == '\\')
+        else if ((pathStr.length() >= 2) && pathStr[0] == '\\' && pathStr[1] == '\\')
         {
             // The first folder will contain the name of the remote computer.
             currentPath = path::combine(path::separator(), path::separator(), folders[0], path::separator());
