@@ -116,7 +116,7 @@ namespace vfs {
                 )
             );
 
-            pData_ = reinterpret_cast<uint8_t*>(mmap(nullptr, fileTotalSize_, fileMapAccess, MAP_PRIVATE, spFile_->nativeHandle(), 0));
+            pData_ = reinterpret_cast<uint8_t*>(mmap(nullptr, fileTotalSize_, fileMapAccess, MAP_SHARED, spFile_->nativeHandle(), 0));
             pCursor_ = pData_;
 
             if (pData_ == MAP_FAILED)
