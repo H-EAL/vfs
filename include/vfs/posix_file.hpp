@@ -288,14 +288,13 @@ namespace vfs {
         static int32_t posix_file_attributes(file_attributes attributes)
         {
             auto attr = int32_t{ 0 };
-
             /*
             if (uint32_t(attributes) & uint32_t(file_attributes::normal))
                 attr |= FILE_ATTRIBUTE_NORMAL;
-            */
+            
             if (uint32_t(attributes) & uint32_t(file_attributes::temporary))
                 attr |= O_TMPFILE;
-            
+            */
             return attr;
         }
     };
