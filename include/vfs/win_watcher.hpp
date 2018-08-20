@@ -46,7 +46,7 @@ namespace vfs {
         {
             if (callback_ == nullptr)
             {
-                vfs_errorf("NULL callback specified to watcher %ws", dir_.c_str());
+                vfs_errorf("NULL callback specified to watcher %s", dir_.c_str());
                 return false;
             }
 
@@ -55,7 +55,7 @@ namespace vfs {
             eventHandle_ = CreateEvent(nullptr, bManualReset, bInitialState, nullptr);
             if (eventHandle_ == nullptr)
             {
-                vfs_errorf("Could not create event for watcher %ws", dir_.c_str());
+                vfs_errorf("Could not create event for watcher %s", dir_.c_str());
                 return false;
             }
 
@@ -69,7 +69,7 @@ namespace vfs {
             if (handle_ == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %ws", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
+                vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %s", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
                 return false;
             }
 
@@ -89,7 +89,7 @@ namespace vfs {
             const auto success = SetEvent(eventHandle_);
             if (success == FALSE)
             {
-                vfs_errorf("Could not signal the event to wake up watcher %ws", dir_.c_str());
+                vfs_errorf("Could not signal the event to wake up watcher %s", dir_.c_str());
                 return false;
             }
             CloseHandle(eventHandle_);

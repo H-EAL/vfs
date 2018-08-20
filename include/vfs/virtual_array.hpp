@@ -243,9 +243,9 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void* reserve(int64_t size)
         {
-        #if FTL_PLATFORM_WIN
-            return VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE));
-        #elif FTL_PLATFORM_POSIX
+        #if VFS_PLATFORM_WIN
+            return VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE);
+        #elif VFS_PLATFORM_POSIX
             return mmap(nullptr, size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
         #endif
         }
@@ -253,9 +253,9 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void* commit(void *pAddr, int64_t size)
         {
-        #if FTL_PLATFORM_WIN
+        #if VFS_PLATFORM_WIN
             return VirtualAlloc(pAddr, size, MEM_COMMIT, PAGE_READWRITE);
-        #elif FTL_PLATFORM_POSIX
+        #elif VFS_PLATFORM_POSIX
             return mprotect(pAddr, size, PROT_READ | PROT_WRITE) == 0 ? pAddr : nullptr;
         #endif 
         }
@@ -263,10 +263,10 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void deallocate()
         {
-        #if FTL_PLATFORM_WIN
+        #if VFS_PLATFORM_WIN
             VirtualFree(pArray_, 0, MEM_RELEASE);
             VirtualFree(pControlRegister_, 0, MEM_RELEASE);
-        #elif FTL_PLATFORM_POSIX
+        #elif VFS_PLATFORM_POSIX
             munmap(pArray_, 0);
             munmap(pControlRegister_, 0);
         #endif

@@ -28,7 +28,7 @@ namespace vfs {
             if (CreateDirectory(dirPath.c_str(), nullptr) == FALSE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("CreateDirectory(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("CreateDirectory(%s) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
             return true;
@@ -40,7 +40,7 @@ namespace vfs {
             if (RemoveDirectory(dirPath.c_str()) == FALSE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("RemoveDirectory(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("RemoveDirectory(%s) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
             return true;
@@ -56,7 +56,7 @@ namespace vfs {
             if (hFile == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("FindFirstFile(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("FindFirstFile(%s) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
                 return;
             }
 
@@ -83,7 +83,7 @@ namespace vfs {
             const auto errorCode = GetLastError();
             if (errorCode != ERROR_NO_MORE_FILES)
             {
-                vfs_errorf("FindNextFile(%ws) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("FindNextFile(%s) returned error: %s", dirPath.c_str(), get_last_error_as_string(errorCode).c_str());
             }
             
             FindClose(hFile);

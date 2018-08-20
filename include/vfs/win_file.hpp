@@ -76,7 +76,7 @@ namespace vfs {
             if (fileHandle_ == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("CreateFile(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("CreateFile(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
             }
         }
 
@@ -121,7 +121,7 @@ namespace vfs {
             if (!GetFileSizeEx(fileHandle_, PLARGE_INTEGER(&fileSize)))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("GetFileSizeEx(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("GetFileSizeEx(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
             }
             return fileSize;
         }
@@ -133,7 +133,7 @@ namespace vfs {
             if (!SetEndOfFile(fileHandle_))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("SetEndOfFile(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("SetEndOfFile(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
             return true;
@@ -148,7 +148,7 @@ namespace vfs {
             if (!SetFilePointerEx(fileHandle_, liDistanceToMove, nullptr, FILE_CURRENT))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("SetFilePointerEx(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("SetFilePointerEx(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
             return true;
@@ -162,7 +162,7 @@ namespace vfs {
             if (!ReadFile(fileHandle_, (LPVOID)dst, DWORD(sizeInBytes), &numberOfBytesRead, nullptr))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("ReadFile(%ws, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("ReadFile(%s, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
             }
             return numberOfBytesRead;
         }
@@ -175,7 +175,7 @@ namespace vfs {
             if (!WriteFile(fileHandle_, (LPCVOID)src, DWORD(sizeInBytes), &numberOfBytesWritten, nullptr))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("WriteFile(%ws, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("WriteFile(%s, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
             }
             return numberOfBytesWritten;
         }
@@ -200,7 +200,7 @@ namespace vfs {
             if (fileMappingHandle_ == nullptr)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("CreateFileMapping(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("CreateFileMapping(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
 
