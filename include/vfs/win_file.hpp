@@ -92,6 +92,21 @@ namespace vfs {
             return (dwAttrib != INVALID_FILE_ATTRIBUTES) && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
         }
 
+        static uint64_t get_last_write_time(const path &filePath)
+        {
+            auto lastWrite = 0ull;
+
+            auto fileInfo = WIN32_FILE_ATTRIBUTE_DATA{};
+            const auto result = GetFileAttributesEx(filePath.c_str(), GetFileExInfoStandard, &fileInfo);
+
+            if (result != 0)
+            {
+                lastWrite = (uint64_t(fileInfo.ftLastWriteTime.dwHighDateTime) << 32ull) | fileInfo.ftLastWriteTime.dwLowDateTime;
+            }
+
+            return lastWrite;
+        }
+
     protected:
         bool isValid() const
         {

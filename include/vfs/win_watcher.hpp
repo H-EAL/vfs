@@ -62,7 +62,7 @@ namespace vfs {
             // Watch the directory for file creation and deletion.
             auto flags = DWORD{ 0 };
             flags |= folders ? FILE_NOTIFY_CHANGE_DIR_NAME : 0;
-            flags |= files ? FILE_NOTIFY_CHANGE_FILE_NAME : 0;
+            flags |= files ? FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE : 0;
 
             handle_ = FindFirstChangeNotification(dir_.c_str(), FALSE, flags);
 

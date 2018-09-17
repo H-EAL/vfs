@@ -39,6 +39,11 @@ namespace vfs {
         {
             return base_type::exists(filePath);
         }
+        //------------------------------------------------------------------------------------------
+        static uint64_t get_last_write_time(const path &filePath)
+        {
+            return base_type::get_last_write_time(filePath);
+        }
 
     public:
         //------------------------------------------------------------------------------------------

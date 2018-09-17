@@ -91,6 +91,12 @@ namespace vfs {
             stat(filePath.c_str(), &st);
             return (st.st_mode & S_IFMT) == S_IFREG;
         }
+        
+        static uint64_t get_last_write_time(const path &filePath)
+        {
+            ///TODO
+            return 0ull;
+        }
 
     protected:
         bool isValid() const
