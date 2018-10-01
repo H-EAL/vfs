@@ -131,7 +131,12 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         bool unmap()
         {
-            if (pData_ && munmap(pData_, fileTotalSize_) == -1)
+            if (pData_ == nullptr || pData_ == MAP_FAILED)
+            {
+                return true;
+            }
+
+            if (munmap(pData_, fileTotalSize_) == -1)
             {
                 return false;
             }
