@@ -117,12 +117,16 @@ namespace vfs {
             );
 
             pData_ = reinterpret_cast<uint8_t*>(mmap(nullptr, fileTotalSize_, fileMapAccess, MAP_SHARED, spFile_->nativeHandle(), 0));
-            pCursor_ = pData_;
 
             if (pData_ == MAP_FAILED)
             {
+                pData_ = nullptr;
                 vfs_errorf("mmap(nullptr, %d, %d, MAP_SHARED, %s, 0) failed with error: %s", fileTotalSize_, (int32_t)fileMapAccess, name_.c_str(), get_last_error_as_string(errno).c_str());
                 return false;
+            }
+            else
+            {
+                pCursor_ = pData_;
             }
 
             return true;
@@ -131,12 +135,7 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         bool unmap()
         {
-            if (pData_ == nullptr || pData_ == MAP_FAILED)
-            {
-                return true;
-            }
-
-            if (munmap(pData_, fileTotalSize_) == -1)
+            if (pData_ && munmap(pData_, fileTotalSize_) == -1)
             {
                 return false;
             }
@@ -183,7 +182,7 @@ namespace vfs {
 		//------------------------------------------------------------------------------------------
         bool isValid() const
         {
-            return pData_ != nullptr;
+            return pData_ != nullptr ;
         }
 
 		//------------------------------------------------------------------------------------------
