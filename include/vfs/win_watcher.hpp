@@ -30,14 +30,14 @@ namespace vfs {
             , callback_(callback)
             , eventHandle_(nullptr)
             , waitTimeoutInMs_(DWORD(std::chrono::duration_cast<std::chrono::milliseconds>(waitTimeout).count()))
-        {}
+        {
+            waitTimeoutInMs_ = (waitTimeoutInMs_ == 0) ? INFINITE : waitTimeoutInMs_;
+        }
 
         //------------------------------------------------------------------------------------------
         win_watcher(const path &dir, const callback_t &callback)
             : win_watcher(dir, std::chrono::seconds(0), callback)
-        {
-            waitTimeoutInMs_ = INFINITE;
-        }
+        {}
 
         //------------------------------------------------------------------------------------------
         win_watcher(win_watcher &&other)
