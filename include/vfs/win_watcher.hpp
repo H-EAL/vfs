@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <thread>
+#include <chrono>
 #include <functional>
 
 #include "vfs/platform.hpp"
@@ -16,32 +17,47 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     class win_watcher
     {
+        //------------------------------------------------------------------------------------------
         using callback_t = std::function<void(const path&)>;
 
     public:
-        win_watcher(const path &dir, const callback_t &callback)
+        //------------------------------------------------------------------------------------------
+        template<typename R, typename P>
+        win_watcher(const path &dir, std::chrono::duration<R, P> waitTimeout, const callback_t &callback)
             : running_(false)
             , dir_(dir)
-            , handle_(INVALID_HANDLE_VALUE)
+            , changeHandle_(INVALID_HANDLE_VALUE)
             , callback_(callback)
             , eventHandle_(nullptr)
+            , waitTimeoutInMs_(DWORD(std::chrono::duration_cast<std::chrono::milliseconds>(waitTimeout).count()))
         {}
 
+        //------------------------------------------------------------------------------------------
+        win_watcher(const path &dir, const callback_t &callback)
+            : win_watcher(dir, std::chrono::seconds(0), callback)
+        {
+            waitTimeoutInMs_ = INFINITE;
+        }
+
+        //------------------------------------------------------------------------------------------
         win_watcher(win_watcher &&other)
             : running_(other.running_.load())
             , dir_(std::move(other.dir_))
-            , handle_(other.handle_)
+            , changeHandle_(other.changeHandle_)
             , callback_(std::move(other.callback_))
             , thread_(std::move(other.thread_))
             , eventHandle_(other.eventHandle_)
+            , waitTimeoutInMs_(other.waitTimeoutInMs_)
         {
-            other.handle_       = INVALID_HANDLE_VALUE;
+            other.changeHandle_ = INVALID_HANDLE_VALUE;
             other.eventHandle_  = nullptr;
         }
 
+        //------------------------------------------------------------------------------------------
         win_watcher(const win_watcher &)                = delete;
         win_watcher& operator =(const win_watcher &)    = delete;
 
+        //------------------------------------------------------------------------------------------
         bool startWatching(bool folders, bool files)
         {
             if (callback_ == nullptr)
@@ -64,9 +80,9 @@ namespace vfs {
             flags |= folders ? FILE_NOTIFY_CHANGE_DIR_NAME : 0;
             flags |= files ? FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE : 0;
 
-            handle_ = FindFirstChangeNotification(dir_.c_str(), FALSE, flags);
+            changeHandle_ = FindFirstChangeNotification(dir_.c_str(), FALSE, flags);
 
-            if (handle_ == INVALID_HANDLE_VALUE)
+            if (changeHandle_ == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
                 vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %s", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
@@ -83,6 +99,7 @@ namespace vfs {
             return true;
         }
 
+        //------------------------------------------------------------------------------------------
         bool stopWatching()
         {
             running_ = false;
@@ -106,6 +123,7 @@ namespace vfs {
         }
 
     private:
+        //------------------------------------------------------------------------------------------
         void run()
         {
             // Call the callback in case we have some folders in there waiting before we started the process
@@ -113,8 +131,8 @@ namespace vfs {
 
             while (running_)
             {
-                HANDLE handles[] = { eventHandle_, handle_ };
-                const auto dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+                HANDLE handles[] = { eventHandle_, changeHandle_ };
+                const auto dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, waitTimeoutInMs_);
 
                 if (dwWaitStatus == WAIT_OBJECT_0)
                 {
@@ -122,7 +140,7 @@ namespace vfs {
                     return;
                 }
 
-                if (dwWaitStatus != (WAIT_OBJECT_0+1) )
+                if ((dwWaitStatus != (WAIT_OBJECT_0+1)) && (dwWaitStatus != WAIT_TIMEOUT))
                 {
                     vfs_check("Unhandled dwWaitStatus {0:x}");
                     return;
@@ -131,7 +149,7 @@ namespace vfs {
                 // Call callback
                 callback_(dir_);
 
-                if (FindNextChangeNotification(handle_) == FALSE)
+                if (FindNextChangeNotification(changeHandle_) == FALSE)
                 {
                     vfs_errorf("FindNextChangeNotification function failed with error code %d", GetLastError());
                     return;
@@ -140,12 +158,14 @@ namespace vfs {
         }
 
     private:
+        //------------------------------------------------------------------------------------------
         std::atomic<bool>   running_;
         path                dir_;
-        HANDLE              handle_;
+        HANDLE              changeHandle_;
         callback_t          callback_;
         std::thread         thread_;
         HANDLE              eventHandle_;
+        DWORD               waitTimeoutInMs_;
     };
 
 } /*vfs*/
