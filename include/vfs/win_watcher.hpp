@@ -142,17 +142,25 @@ namespace vfs {
 
                 if ((dwWaitStatus != (WAIT_OBJECT_0+1)) && (dwWaitStatus != WAIT_TIMEOUT))
                 {
-                    vfs_check("Unhandled dwWaitStatus {0:x}");
+                    vfs_errorf("Unhandled dwWaitStatus %x.", dwWaitStatus);
                     return;
                 }
 
                 // Call callback
                 callback_(dir_);
 
-                if (FindNextChangeNotification(changeHandle_) == FALSE)
+                static constexpr auto max_attempts = 5;
+                auto attempts = max_attempts;
+                while (FindNextChangeNotification(changeHandle_) == FALSE && attempts--)
                 {
-                    vfs_errorf("FindNextChangeNotification function failed with error code %d", GetLastError());
-                    return;
+                    vfs_warningf("FindNextChangeNotification function failed with error code %d", GetLastError());
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    
+                    if (attempts == 0)
+                    {
+                        vfs_errorf("FindNextChangeNotification kept failing afer %d attempts.", max_attempts);
+                        return;
+                    }
                 }
             }
         }
