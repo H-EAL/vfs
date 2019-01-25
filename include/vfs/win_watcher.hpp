@@ -30,6 +30,7 @@ namespace vfs {
             , callback_(callback)
             , eventHandle_(nullptr)
             , waitTimeoutInMs_(DWORD(std::chrono::duration_cast<std::chrono::milliseconds>(waitTimeout).count()))
+            , filter_(0)
         {
             waitTimeoutInMs_ = (waitTimeoutInMs_ == 0) ? INFINITE : waitTimeoutInMs_;
         }
@@ -48,6 +49,7 @@ namespace vfs {
             , thread_(std::move(other.thread_))
             , eventHandle_(other.eventHandle_)
             , waitTimeoutInMs_(other.waitTimeoutInMs_)
+            , filter_(other.filter_)
         {
             other.changeHandle_ = INVALID_HANDLE_VALUE;
             other.eventHandle_  = nullptr;
@@ -76,16 +78,11 @@ namespace vfs {
             }
 
             // Watch the directory for file creation and deletion.
-            auto flags = DWORD{ 0 };
-            flags |= folders ? FILE_NOTIFY_CHANGE_DIR_NAME : 0;
-            flags |= files ? FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE : 0;
+            filter_ |= folders ? FILE_NOTIFY_CHANGE_DIR_NAME : 0;
+            filter_ |= files ? FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE : 0;
 
-            changeHandle_ = FindFirstChangeNotification(dir_.c_str(), FALSE, flags);
-
-            if (changeHandle_ == INVALID_HANDLE_VALUE)
+            if (!setupHandle())
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %s", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
                 return false;
             }
 
@@ -95,6 +92,21 @@ namespace vfs {
             {
                 run();
             });
+
+            return true;
+        }
+
+        //------------------------------------------------------------------------------------------
+        bool setupHandle()
+        {
+            changeHandle_ = FindFirstChangeNotification(dir_.c_str(), FALSE, filter_);
+
+            if (changeHandle_ == INVALID_HANDLE_VALUE)
+            {
+                const auto errorCode = GetLastError();
+                vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %s", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
+                return false;
+            }
 
             return true;
         }
@@ -151,18 +163,28 @@ namespace vfs {
 
                 static constexpr auto max_attempts = 5;
                 auto attempts = max_attempts;
-                while (FindNextChangeNotification(changeHandle_) == FALSE && attempts--)
+                while (FindNextChangeNotification(changeHandle_) == FALSE)
                 {
-                    vfs_warningf("FindNextChangeNotification function failed with error code %d", GetLastError());
+                    const auto errorCode = GetLastError();
+                    vfs_warningf("FindNextChangeNotification function failed with error code %s.", get_last_error_as_string(errorCode).c_str());
                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                    
-                    if (attempts == 0)
+
+                    FindCloseChangeNotification(changeHandle_);
+
+                    if (!setupHandle())
+                    {
+                        return;
+                    }
+
+                    if (--attempts == 0)
                     {
                         vfs_errorf("FindNextChangeNotification kept failing afer %d attempts.", max_attempts);
                         return;
                     }
                 }
             }
+
+            FindCloseChangeNotification(changeHandle_);
         }
 
     private:
@@ -174,6 +196,7 @@ namespace vfs {
         std::thread         thread_;
         HANDLE              eventHandle_;
         DWORD               waitTimeoutInMs_;
+        DWORD               filter_;
     };
 
 } /*vfs*/
