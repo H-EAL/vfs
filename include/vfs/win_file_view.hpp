@@ -77,7 +77,7 @@ namespace vfs {
                     (
                         INVALID_HANDLE_VALUE,
                         nullptr,
-                        PAGE_READWRITE,
+                        PAGE_READWRITE | SEC_RESERVE,                           //SEC_RESERVE allows extensions on shared memory cases
                         DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
                         name_.c_str()
                     );
@@ -102,7 +102,8 @@ namespace vfs {
                 )
             );
 
-            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(fileMappingHandle_, fileMapAccess, 0, 0, 0));
+            // map only allocated size, and allow extension on shared memory
+            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(fileMappingHandle_, fileMapAccess, 0, 0, viewSize));
             pCursor_ = pData_;
 
             if (pData_ == nullptr)
