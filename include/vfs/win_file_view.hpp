@@ -77,7 +77,7 @@ namespace vfs {
                     (
                         INVALID_HANDLE_VALUE,
                         nullptr,
-                        PAGE_READWRITE | SEC_RESERVE,                           //SEC_RESERVE allows extensions on shared memory cases
+                        PAGE_READWRITE /*| SEC_RESERVE*/,                           //SEC_RESERVE allows extensions on shared memory cases
                         DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
                         name_.c_str()
                     );
