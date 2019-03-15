@@ -115,17 +115,23 @@ namespace vfs {
         bool stopWatching()
         {
             running_ = false;
-            const auto success = SetEvent(eventHandle_);
-            if (success == FALSE)
-            {
-                vfs_errorf("Could not signal the event to wake up watcher %s", dir_.c_str());
-                return false;
-            }
+            wakeUp();
             CloseHandle(eventHandle_);
             eventHandle_ = nullptr;
             return true;
         }
 
+        //------------------------------------------------------------------------------------------
+        void wakeUp()
+        {
+            const auto success = SetEvent(eventHandle_);
+            if (success == FALSE)
+            {
+                vfs_errorf("Could not signal the event to wake up watcher %s", dir_.c_str());
+            }
+        }
+
+        //------------------------------------------------------------------------------------------
         void wait()
         {
             if (thread_.joinable())
@@ -146,14 +152,18 @@ namespace vfs {
                 HANDLE handles[] = { eventHandle_, changeHandle_ };
                 const auto dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, waitTimeoutInMs_);
 
-                if (dwWaitStatus == WAIT_OBJECT_0)
+                switch (dwWaitStatus)
                 {
-                    vfs_check(running_ == false);
-                    return;
-                }
+                case WAIT_OBJECT_0:
+                    if (running_ == false)
+                    {
+                        return;
+                    }
+                case WAIT_OBJECT_0 + 1:
+                case WAIT_TIMEOUT:
+                    break;
 
-                if ((dwWaitStatus != (WAIT_OBJECT_0+1)) && (dwWaitStatus != WAIT_TIMEOUT))
-                {
+                default:
                     vfs_errorf("Unhandled dwWaitStatus %x.", dwWaitStatus);
                     return;
                 }
