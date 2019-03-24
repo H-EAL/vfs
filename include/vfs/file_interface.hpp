@@ -44,6 +44,11 @@ namespace vfs {
         {
             return base_type::get_last_write_time(filePath);
         }
+        //------------------------------------------------------------------------------------------
+        static void delete_file(const path &filePath)
+        {
+            return base_type::delete_file(filePath);
+        }
 
     public:
         //------------------------------------------------------------------------------------------

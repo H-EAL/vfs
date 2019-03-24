@@ -107,6 +107,15 @@ namespace vfs {
             return lastWrite;
         }
 
+        static void delete_file(const path &filePath)
+        {
+            if (DeleteFile(filePath.c_str()) == 0)
+            {
+                const auto errorCode = GetLastError();
+                vfs_errorf("DeleteFile(%s) failed with error: %s", filePath.c_str(), get_last_error_as_string(errorCode).c_str());
+            }
+        }
+
     protected:
         bool isValid() const
         {
