@@ -74,5 +74,17 @@
     <ClInclude Include="..\..\include\vfs\virtual_array.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\pipe.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\pipe_interface.hpp">
+      <Filter>include\_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_pipe.hpp">
+      <Filter>include\_impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_file_flags.hpp">
+      <Filter>include\_impl</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

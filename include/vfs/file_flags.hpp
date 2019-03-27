@@ -26,7 +26,8 @@ namespace vfs {
     {
         none                = 0,
         sequential_scan     = 1 << 0,
-        delete_on_close     = 1 << 1
+        delete_on_close     = 1 << 1,
+        write_through       = 1 << 2
     };
 
     enum class file_attributes : uint32_t
