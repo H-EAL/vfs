@@ -24,20 +24,21 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         pipe_interface
         (
-            const path              &filePath,
+            const path              &pipePath,
             file_access             access,
             file_flags              flags       = file_flags::none,
             file_attributes         attributes  = file_attributes::normal
         )
-            : base_type(filePath, access, flags, attributes)
+            : base_type(pipePath, access, flags, attributes)
         {}
 
         //------------------------------------------------------------------------------------------
         pipe_interface
         (
-            const path &filePath
+            const path &pipePath,
+            pipe_access pipeAccess
         )
-            : base_type(filePath)
+            : base_type(pipePath, pipeAccess)
         {}
 
     public:

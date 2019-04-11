@@ -32,13 +32,13 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     inline auto connect_to_named_pipe
     (
-        const path              &fileName,
+        const path              &pipeName,
         file_access             fileAccess,
         file_flags              fileFlags = file_flags::none,
         file_attributes         fileAttributes = file_attributes::normal
     )
     {
-        return pipe_sptr(new pipe_stream(fileName, fileAccess, fileFlags, fileAttributes));
+        return pipe_sptr(new pipe_stream(pipeName, fileAccess, fileFlags, fileAttributes));
     }
     //----------------------------------------------------------------------------------------------
 
@@ -46,13 +46,13 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     inline auto create_named_pipe
     (
-        const path              &fileName,
-        file_access             fileAccess,
+        const path              &pipeName,
+        pipe_access             pipeAccess,
         file_flags              fileFlags = file_flags::none,
         file_attributes         fileAttributes = file_attributes::normal
     )
     {
-        return pipe_sptr(new pipe_stream(fileName));
+        return pipe_sptr(new pipe_stream(pipeName, pipeAccess));
     }
     //----------------------------------------------------------------------------------------------
 

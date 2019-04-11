@@ -44,4 +44,11 @@ namespace vfs {
         read_write,
     };
 
+    enum class pipe_access : uint32_t
+    {
+        inbound,
+        outbound,
+        duplex,
+    };
+
 } /*vfs*/

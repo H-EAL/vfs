@@ -85,17 +85,18 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         win_pipe
         (
-            const path &name
+            const path &name,
+            pipe_access pipeAccess
         )
             : pipeName_(name)
         {
             pipeHandle_ = CreateNamedPipe
             (
                 pipeName_.c_str(),
-                PIPE_ACCESS_INBOUND,
+                win_pipe_access(pipeAccess),
                 PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
                 PIPE_UNLIMITED_INSTANCES,
-                0, 4096,
+                4096, 4096,
                 NMPWAIT_USE_DEFAULT_WAIT,
                 nullptr
             );

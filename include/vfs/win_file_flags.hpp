@@ -82,4 +82,18 @@ namespace vfs {
         return attr;
     }
 
+    //----------------------------------------------------------------------------------------------
+    inline DWORD win_pipe_access(pipe_access access)
+    {
+        switch (access)
+        {
+        case pipe_access::inbound:  return PIPE_ACCESS_INBOUND;
+        case pipe_access::outbound: return PIPE_ACCESS_OUTBOUND;
+        case pipe_access::duplex:   return PIPE_ACCESS_DUPLEX;
+        }
+
+        vfs_check(false);
+        return 0;
+    }
+
 } /*vfs*/
