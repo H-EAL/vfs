@@ -14,6 +14,7 @@
 #endif
 
 #include "vfs/path.hpp"
+#include "vfs/file.hpp"
 
 
 namespace vfs {
