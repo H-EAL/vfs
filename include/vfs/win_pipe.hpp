@@ -158,7 +158,10 @@ namespace vfs {
             if (ConnectNamedPipe(pipeHandle_, nullptr) == FALSE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("ConnectNamedPipe failed with error: %s", get_last_error_as_string(errorCode).c_str());
+                if (errorCode != ERROR_OPERATION_ABORTED)
+                {
+                    vfs_errorf("ConnectNamedPipe failed with error: %s", get_last_error_as_string(errorCode).c_str());
+                }
                 return false;
             }
 
@@ -186,7 +189,7 @@ namespace vfs {
             if (!ReadFile(pipeHandle_, (LPVOID)dst, DWORD(sizeInBytes), &numberOfBytesRead, nullptr))
             {
                 const auto errorCode = GetLastError();
-                if (errorCode != ERROR_MORE_DATA)
+                if (errorCode != ERROR_MORE_DATA && errorCode != ERROR_OPERATION_ABORTED)
                 {
                     vfs_errorf("ReadFile(%s, %d) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
                     close();
