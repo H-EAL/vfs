@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vfs/platform.hpp"
 #include "vfs/string_utils.hpp"
 
 
