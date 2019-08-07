@@ -92,7 +92,7 @@ namespace vfs {
     }
     
     //----------------------------------------------------------------------------------------------
-    inline bool move_directory(const path &src, const path &dst)
+    inline bool move_directory(const path &src, const path &dst, bool overwrite = false)
     {
         if (!directory::exists(src))
         {
@@ -100,14 +100,16 @@ namespace vfs {
             return false;
         }
 
-        if (directory::exists(dst))
+        if (!directory::exists(dst))
+        {
+            if (!directory::create_directory(dst))
+            {
+                return false;
+            }
+        }
+        else if (!overwrite)
         {
             vfs_errorf("Destination directory already exists: %s", dst.c_str());
-            return false;
-        }
-
-        if (!directory::create_directory(dst))
-        {
             return false;
         }
 
@@ -118,7 +120,7 @@ namespace vfs {
         for (const auto &srcPath : dir.getFiles())
         {
             const auto &dstPath = path::combine(dst, extract_file_name(srcPath));
-            file::move(srcPath, dstPath);
+            file::move(srcPath, dstPath, overwrite);
         }
         // Recursively create the sub directories hierarchy.
         for (auto &d : dir.getSubDirectories())
