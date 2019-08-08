@@ -74,21 +74,25 @@ namespace vfs {
     }
 
     //----------------------------------------------------------------------------------------------
-    inline bool delete_directory(const path &dirPath)
+    inline bool delete_directory(const path &dirPath, bool recursivelyDeleteFiles = false)
     {
-        bool success = true;
         auto dir = directory(dirPath);
         dir.scan();
+
+        if (recursivelyDeleteFiles)
+        {
+            for (const auto &f : dir.getFiles())
+            {
+                file::delete_file(f);
+            }
+        }
+
         for (const auto &subDir : dir.getSubDirectories())
         {
-            success = success && delete_directory(subDir.getPath());
+            delete_directory(subDir.getPath(), recursivelyDeleteFiles);
         }
-        directory::delete_directory(dirPath);
-//             for (const auto &f : dir.getFiles())
-//             {
-//                 file::delete_file(f);
-//             }
-        return success;
+
+        return directory::delete_directory(dirPath);
     }
     
     //----------------------------------------------------------------------------------------------
