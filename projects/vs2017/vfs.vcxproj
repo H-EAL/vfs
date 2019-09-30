@@ -101,6 +101,8 @@
     <ClInclude Include="..\..\include\vfs\shared_memory.hpp" />
     <ClInclude Include="..\..\include\vfs\stream_interface.hpp" />
     <ClInclude Include="..\..\include\vfs\string_utils.hpp" />
+    <ClInclude Include="..\..\include\vfs\virtual_allocator.hpp" />
+    <ClInclude Include="..\..\include\vfs\virtual_allocator_interface.hpp" />
     <ClInclude Include="..\..\include\vfs\virtual_array.hpp" />
     <ClInclude Include="..\..\include\vfs\watcher.hpp" />
     <ClInclude Include="..\..\include\vfs\watcher_interface.hpp" />
@@ -109,6 +111,7 @@
     <ClInclude Include="..\..\include\vfs\win_file_flags.hpp" />
     <ClInclude Include="..\..\include\vfs\win_file_view.hpp" />
     <ClInclude Include="..\..\include\vfs\win_pipe.hpp" />
+    <ClInclude Include="..\..\include\vfs\win_virtual_allocator.hpp" />
     <ClInclude Include="..\..\include\vfs\win_watcher.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

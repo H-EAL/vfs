@@ -86,5 +86,14 @@
     <ClInclude Include="..\..\include\vfs\win_file_flags.hpp">
       <Filter>include\_impl</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_virtual_allocator.hpp">
+      <Filter>include\_impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\virtual_allocator_interface.hpp">
+      <Filter>include\_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\virtual_allocator.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

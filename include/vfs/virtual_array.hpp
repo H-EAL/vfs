@@ -5,10 +5,11 @@
 #include <atomic>
 
 #include "vfs/logging.hpp"
+#include "vfs/virtual_allocator.hpp"
 
 
 namespace vfs {
-    
+
     //----------------------------------------------------------------------------------------------
     template<typename T, uint32_t _MaxElementCount>
     class virtual_array
@@ -161,9 +162,11 @@ namespace vfs {
                 }
             }
             
-            deallocate();
-            pArray_ = nullptr;
-            pControlRegister_ = nullptr;
+            virtual_allocator::deallocate(pArray_);
+            virtual_allocator::deallocate(pControlRegister_);
+
+            pArray_             = nullptr;
+            pControlRegister_   = nullptr;
         }
 
         //------------------------------------------------------------------------------------------
@@ -183,7 +186,7 @@ namespace vfs {
             if (this != &other)
             {
                 swap(other);
-                other.~virtual_array();
+                other.reset();
             }
             return (*this);
         }
@@ -239,86 +242,56 @@ namespace vfs {
             return pArray_[i];
         }
 
-    private:
-        //------------------------------------------------------------------------------------------
-        void* reserve(int64_t size)
-        {
-        #if VFS_PLATFORM_WIN
-            return VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE);
-        #elif VFS_PLATFORM_POSIX
-            return mmap(nullptr, size, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-        #endif
-        }
-        
-        //------------------------------------------------------------------------------------------
-        void* commit(void *pAddr, int64_t size)
-        {
-        #if VFS_PLATFORM_WIN
-            return VirtualAlloc(pAddr, size, MEM_COMMIT, PAGE_READWRITE);
-        #elif VFS_PLATFORM_POSIX
-            return mprotect(pAddr, size, PROT_READ | PROT_WRITE) == 0 ? pAddr : nullptr;
-        #endif 
-        }
-        
-        //------------------------------------------------------------------------------------------
-        void deallocate()
-        {
-        #if VFS_PLATFORM_WIN
-            VirtualFree(pArray_, 0, MEM_RELEASE);
-            VirtualFree(pControlRegister_, 0, MEM_RELEASE);
-        #elif VFS_PLATFORM_POSIX
-            munmap(pArray_, 0);
-            munmap(pControlRegister_, 0);
-        #endif
-        }
-    
+    private:    
         //------------------------------------------------------------------------------------------
         void init()
         {
-            pArray_ = reinterpret_cast<T*>(reserve(_MaxElementCount * sizeof(T)));
+            pArray_ = virtual_allocator::template reserve<T>(_MaxElementCount);
             vfs_check(pArray_ != nullptr);
-            pControlRegister_ = reinterpret_cast<std::atomic<uint64_t>*>(reserve(_MaxElementCount / sizeof(uint64_t)));
+
+            pControlRegister_ = virtual_allocator::reserve<std::atomic<uint64_t>>((_MaxElementCount / sizeof(uint64_t)) + 1);
             vfs_check(pControlRegister_ != nullptr);
+
             grow(1);
         }
 
         //------------------------------------------------------------------------------------------
         void reset()
         {
-            size_               = 0;
-            pArray_             = nullptr;
-            pageCount_          = 0;
-            nextFreeIndex_      = invalid_index;
-            lastValidIndex_     = 0;
-            pControlRegister_   = nullptr;
-            controlRegisterPageCount_ = 0;
+            size_                       = 0;
+            pArray_                     = nullptr;
+            pageCount_                  = 0;
+            nextFreeIndex_              = invalid_index;
+            lastValidIndex_             = 0;
+            pControlRegister_           = nullptr;
+            controlRegisterPageCount_   = 0;
         }
 
         //------------------------------------------------------------------------------------------
         void swap(virtual_array &other)
         {
-            std::swap(size_             , other.size_               );
-            std::swap(pArray_           , other.pArray_             );
-            std::swap(pageCount_        , other.pageCount_          );
-            std::swap(nextFreeIndex_    , other.nextFreeIndex_      );
-            std::swap(lastValidIndex_   , other.lastValidIndex_     );
-            std::swap(pControlRegister_ , other.pControlRegister_   );
-            std::swap(controlRegisterPageCount_ , other.controlRegisterPageCount_);
+            std::swap(size_                     , other.size_                       );
+            std::swap(pArray_                   , other.pArray_                     );
+            std::swap(pageCount_                , other.pageCount_                  );
+            std::swap(nextFreeIndex_            , other.nextFreeIndex_              );
+            std::swap(lastValidIndex_           , other.lastValidIndex_             );
+            std::swap(pControlRegister_         , other.pControlRegister_           );
+            std::swap(controlRegisterPageCount_ , other.controlRegisterPageCount_   );
         }
 
         //------------------------------------------------------------------------------------------
         void grow(uint32_t pageCount)
         {
-            auto pData = commit(reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size, pageCount * page_size);
-            (void)pData;
+            const auto pArrayOffset             = reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size;
+            [[maybe_unused]] const auto pData   = virtual_allocator::commit(pArrayOffset, pageCount * page_size);
             vfs_check(pData != nullptr);
             pageCount_ += pageCount;
 
             const auto neededControlRegisterPageCount = uint32_t(elements_per_page * pageCount_ / control_bits_per_page) + 1 - controlRegisterPageCount_;
             if (neededControlRegisterPageCount > 0)
             {
-                auto pData = commit(reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size, neededControlRegisterPageCount * page_size);
-                (void)pData;
+                const auto pRegisterOffset          = reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size;
+                [[maybe_unused]] const auto pData   = virtual_allocator::commit(pRegisterOffset, neededControlRegisterPageCount * page_size);
                 vfs_check(pData != nullptr);
                 controlRegisterPageCount_ += neededControlRegisterPageCount;
             }
@@ -367,8 +340,7 @@ namespace vfs {
                 *reinterpret_cast<uint32_t*>(&pArray_[freeIndex]) = expectedNextFreeIndex;
             } while (!nextFreeIndex_.compare_exchange_strong(expectedNextFreeIndex, freeIndex, std::memory_order_acq_rel));
 
-            auto i = nextFreeIndex_.load();
-            (void)i;
+            [[maybe_unused]] const auto i = nextFreeIndex_.load();
             vfs_check(i < lastValidIndex_ || i == invalid_index);
         }
 
@@ -390,8 +362,7 @@ namespace vfs {
                     freeIndex = expectedNextFreeIndex;
                 }
 
-                auto i = nextFreeIndex_.load();
-                (void)i;
+                [[maybe_unused]] const auto i = nextFreeIndex_.load();
                 vfs_check(i < lastValidIndex_ || i == invalid_index);
             }
             return freeIndex;
@@ -409,4 +380,4 @@ namespace vfs {
         std::atomic<uint32_t>   nextFreeIndex_;
     };
     
-} /*ftl*/
+} /*vfs*/
