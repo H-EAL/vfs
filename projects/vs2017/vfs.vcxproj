@@ -110,6 +110,7 @@
     <ClInclude Include="..\..\include\vfs\win_file.hpp" />
     <ClInclude Include="..\..\include\vfs\win_file_flags.hpp" />
     <ClInclude Include="..\..\include\vfs\win_file_view.hpp" />
+    <ClInclude Include="..\..\include\vfs\win_move.hpp" />
     <ClInclude Include="..\..\include\vfs\win_pipe.hpp" />
     <ClInclude Include="..\..\include\vfs\win_virtual_allocator.hpp" />
     <ClInclude Include="..\..\include\vfs\win_watcher.hpp" />

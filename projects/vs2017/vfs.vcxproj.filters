@@ -95,5 +95,8 @@
     <ClInclude Include="..\..\include\vfs\virtual_allocator.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_move.hpp">
+      <Filter>include\_impl</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
