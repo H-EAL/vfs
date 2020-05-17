@@ -22,21 +22,21 @@ namespace vfs {
 
         // Single value
         template<typename T>
-        int64_t read(T &toRead)
+        uint64_t read(T &toRead)
         {
-            const int64_t sizeInBytes = sizeof(T);
+            const uint64_t sizeInBytes = sizeof(T);
             return _StreamImpl::read((uint8_t*)&toRead, sizeInBytes);
         }
 
         // Specialization for string
-        int64_t read(std::string &toRead)
+        uint64_t read(std::string &toRead)
         {
             return read(toRead.data(), toRead.size());
         }
 
         // Specialization for vector
         template<typename T>
-        int64_t read(std::vector<T> &toRead)
+        uint64_t read(std::vector<T> &toRead)
         {
             return read(toRead.data(), toRead.size());
         }
@@ -51,21 +51,21 @@ namespace vfs {
 
         // Write
         template<typename T>
-        int64_t write(const T &toWrite)
+        uint64_t write(const T &toWrite)
         {
-            const int64_t sizeInBytes = sizeof(T);
+            const uint64_t sizeInBytes = sizeof(T);
             return _StreamImpl::write((const uint8_t*)&toWrite, sizeInBytes);
         }
 
         // Specialization for string
-        int64_t write(const std::string &toWrite)
+        uint64_t write(const std::string &toWrite)
         {
             return write(toWrite.data(), toWrite.size());
         }
 
         // Specialization for vector
         template<typename T>
-        int64_t write(const std::vector<T> &toWrite)
+        uint64_t write(const std::vector<T> &toWrite)
         {
             return write(toWrite.data(), toWrite.size());
         }
@@ -79,36 +79,36 @@ namespace vfs {
         }
 
         // Raw Byte array
-        int64_t write(const void *pToWrite, int64_t sizeInBytes)
+        uint64_t write(const void *pToWrite, uint64_t sizeInBytes)
         {
             return _StreamImpl::write((const uint8_t*)pToWrite, sizeInBytes);
         }
 
-        int64_t read(void *pToRead, int64_t sizeInBytes)
+        uint64_t read(void *pToRead, uint64_t sizeInBytes)
         {
             return _StreamImpl::read((uint8_t*)pToRead, sizeInBytes);
         }
 
         // Dynamic array
         template<typename T>
-        int64_t read(T *pToRead, int64_t count)
+        uint64_t read(T *pToRead, uint64_t count)
         {
-            const int64_t sizeInBytes = count * sizeof(T);
+            const uint64_t sizeInBytes = count * sizeof(T);
             return _StreamImpl::read((uint8_t*)pToRead, sizeInBytes);
         }
 
         template<typename T>
-        int64_t write(const T *pToWrite, int64_t count)
+        uint64_t write(const T *pToWrite, uint64_t count)
         {
-            const int64_t sizeInBytes = count * sizeof(T);
+            const uint64_t sizeInBytes = count * sizeof(T);
             return _StreamImpl::write((const uint8_t*)pToWrite, sizeInBytes);
         }
 
         // Static array
         template<typename T, int N>
-        int64_t read(T(&toRead)[N])
+        uint64_t read(T(&toRead)[N])
         {
-            const int64_t sizeInBytes = N * sizeof(T);
+            const uint64_t sizeInBytes = N * sizeof(T);
             return _StreamImpl::read((uint8_t*)toRead, sizeInBytes);
         }
 
@@ -120,9 +120,9 @@ namespace vfs {
         }
 
         template<typename T, int N>
-        int64_t write(const T(&toWrite)[N])
+        uint64_t write(const T(&toWrite)[N])
         {
-            const int64_t sizeInBytes = N * sizeof(T);
+            const uint64_t sizeInBytes = N * sizeof(T);
             return _StreamImpl::write((const uint8_t*)toWrite, sizeInBytes);
         }
 

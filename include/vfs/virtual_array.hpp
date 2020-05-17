@@ -290,9 +290,9 @@ namespace vfs {
             const auto neededControlRegisterPageCount = uint32_t(elements_per_page * pageCount_ / control_bits_per_page) + 1 - controlRegisterPageCount_;
             if (neededControlRegisterPageCount > 0)
             {
-                const auto pRegisterOffset          = reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size;
-                [[maybe_unused]] const auto pData   = virtual_allocator::commit(pRegisterOffset, neededControlRegisterPageCount * page_size);
-                vfs_check(pData != nullptr);
+                const auto pRegisterOffset      = reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size;
+                [[maybe_unused]] const auto p   = virtual_allocator::commit(pRegisterOffset, neededControlRegisterPageCount * page_size);
+                vfs_check(p != nullptr);
                 controlRegisterPageCount_ += neededControlRegisterPageCount;
             }
         }

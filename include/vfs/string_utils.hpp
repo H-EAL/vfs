@@ -77,7 +77,7 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     inline std::string to_lower_case(std::string str)
     {
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        std::transform(str.begin(), str.end(), str.begin(), [](char c) { return char(::tolower(c)); });
         return str;
     }
 

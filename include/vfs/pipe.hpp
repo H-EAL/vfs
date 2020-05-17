@@ -47,9 +47,7 @@ namespace vfs {
     inline auto create_named_pipe
     (
         const path              &pipeName,
-        pipe_access             pipeAccess,
-        file_flags              fileFlags = file_flags::none,
-        file_attributes         fileAttributes = file_attributes::normal
+        pipe_access             pipeAccess
     )
     {
         return pipe_sptr(new pipe_stream(pipeName, pipeAccess));
