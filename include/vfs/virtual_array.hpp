@@ -230,6 +230,12 @@ namespace vfs {
         }
 
         //------------------------------------------------------------------------------------------
+        uint32_t getLastValidIndex() const
+        {
+            return lastValidIndex_;
+        }
+
+        //------------------------------------------------------------------------------------------
         uint32_t size() const
         {
             return size_.load(std::memory_order_acquire);
