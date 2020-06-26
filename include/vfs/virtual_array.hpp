@@ -56,8 +56,7 @@ namespace vfs {
         private:
             void goToNextValidIndex()
             {
-                while (currentIndex_ < arr_.lastValidIndex_
-                    && (arr_.pControlRegister_[currentIndex_ / 64] & (1ull << (currentIndex_ % 64))) == 0)
+                while ((currentIndex_ < arr_.lastValidIndex_) && !arr_.isIndexValid(currentIndex_))
                 {
                     ++currentIndex_;
                 }
@@ -103,8 +102,7 @@ namespace vfs {
         private:
             void goToNextValidIndex()
             {
-                while (currentIndex_ < arr_.lastValidIndex_
-                    && (arr_.pControlRegister_[currentIndex_ / 64] & (1ull << (currentIndex_ % 64))) == 0)
+                while ((currentIndex_ < arr_.lastValidIndex_) && !arr_.isIndexValid(currentIndex_))
                 {
                     ++currentIndex_;
                 }
@@ -222,6 +220,13 @@ namespace vfs {
             pushFreeList(index);
 
             --size_;
+        }
+
+        //------------------------------------------------------------------------------------------
+        bool isIndexValid(uint32_t index) const
+        {
+            return index < lastValidIndex_
+                && (pControlRegister_[index / 64] & (1ull << (index % 64))) != 0;
         }
 
         //------------------------------------------------------------------------------------------
