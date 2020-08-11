@@ -367,7 +367,6 @@ namespace vfs {
                 vfs_check(expectedNextFreeIndex < lastValidIndex_);
                 const auto nextNextFreeIndex = *reinterpret_cast<uint32_t*>(&pArray_[expectedNextFreeIndex]);
 
-                vfs_check(nextNextFreeIndex < lastValidIndex_ || nextNextFreeIndex == invalid_index);
                 if (nextFreeIndex_.compare_exchange_strong(expectedNextFreeIndex, nextNextFreeIndex, std::memory_order_acq_rel))
                 {
                     freeIndex = expectedNextFreeIndex;
