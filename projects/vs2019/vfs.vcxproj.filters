@@ -11,6 +11,9 @@
     <Filter Include="include\_interface">
       <UniqueIdentifier>{31453411-beef-4fd8-9bb4-48496b198bc1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\fmt">
+      <UniqueIdentifier>{2ff48742-cbdd-4af7-8522-8c711ec2b122}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\vfs.hpp" />
@@ -97,6 +100,15 @@
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\win_move.hpp">
       <Filter>include\_impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\fmt\core.h">
+      <Filter>include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\fmt\format.h">
+      <Filter>include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\fmt\format-inl.h">
+      <Filter>include\fmt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -12,8 +12,7 @@ namespace vfs {
     public:
         //------------------------------------------------------------------------------------------
         // If the system is set to Unicode use wide char otherwise use regular char.
-        using string_type       = std::conditional<VFS_USE_UNICODE, std::wstring, std::string>::type;
-        using converter_type    = string_converter<string_type>;
+        using converter_type = string_converter<string>;
 
     public:
         //------------------------------------------------------------------------------------------
@@ -81,7 +80,7 @@ namespace vfs {
 
         //------------------------------------------------------------------------------------------
         // Conversion to native string.
-        const string_type& str() const { return pathStr_; }
+        const string& str() const { return pathStr_; }
         //------------------------------------------------------------------------------------------
         // Conversion to C string.
         const auto c_str() const { return str().c_str(); }
@@ -131,7 +130,7 @@ namespace vfs {
     private:
         //------------------------------------------------------------------------------------------
         // String representation of the actual file or directory path.
-        string_type pathStr_;
+        string pathStr_;
     };
 
 } /*vfs*/

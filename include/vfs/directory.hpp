@@ -100,7 +100,7 @@ namespace vfs {
     {
         if (!directory::exists(src))
         {
-            vfs_errorf("Source directory doesn't exists: %s", src.c_str());
+            vfs_errorf("Source directory doesn't exists: {}", src.str());
             return false;
         }
 
@@ -113,7 +113,7 @@ namespace vfs {
         }
         else if (!overwrite)
         {
-            vfs_errorf("Destination directory already exists: %s", dst.c_str());
+            vfs_errorf("Destination directory already exists: {}", dst.str());
             return false;
         }
 

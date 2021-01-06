@@ -86,7 +86,7 @@ namespace vfs {
                 if (fileMappingHandle_ == nullptr)
                 {
                     const auto errorCode = GetLastError();
-                    vfs_errorf("%sFileMapping(%s) failed with error: %s", openExisting ? "Open" : "Create", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("{}FileMapping({}) failed with error: {}", openExisting ? TEXT("Open") : TEXT("Create"), name_.str(), get_last_error_as_string(errorCode));
                     return false;
                 }
 
@@ -109,7 +109,7 @@ namespace vfs {
             if (pData_ == nullptr)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("MapViewOfFile(%s) failed with error: %s", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("MapViewOfFile({}) failed with error: {}", name_.str(), get_last_error_as_string(errorCode));
                 return false;
             }
 

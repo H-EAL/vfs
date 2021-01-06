@@ -25,8 +25,8 @@ namespace vfs {
                 if (++attempts == maxAttempts)
                 {
                     const auto errorCode = GetLastError();
-                    vfs_errorf("MoveFileEx(%s, %s, MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) failed after %d attempts, returned error: %s",
-                        src.c_str(), dst.c_str(), attempts, get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("MoveFileEx({}, {}, MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) failed after {} attempts, returned error: {}",
+                        src.str(), dst.str(), attempts, get_last_error_as_string(errorCode));
                     return false;
                 }
             }
@@ -52,8 +52,8 @@ namespace vfs {
                 if (++attempts == maxAttempts)
                 {
                     const auto errorCode = GetLastError();
-                    vfs_errorf("CopyFile(%s, %s, %d) failed after %d attempts, returned error: %s",
-                        src.c_str(), dst.c_str(), overwrite, attempts, get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("CopyFile({}, {}, {}) failed after {} attempts, returned error: {}",
+                        src.str(), dst.str(), overwrite, attempts, get_last_error_as_string(errorCode));
                     return false;
                 }
             }

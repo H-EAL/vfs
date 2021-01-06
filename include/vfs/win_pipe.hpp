@@ -78,7 +78,7 @@ namespace vfs {
             if (pipeHandle_ == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("CreateFile(%s) failed with error: %s", pipeName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("CreateFile({}) failed with error: {}", pipeName_.str(), get_last_error_as_string(errorCode));
             }
         }
 
@@ -104,7 +104,7 @@ namespace vfs {
             if (pipeHandle_ == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("CreateNamedPipe failed with error: %s", get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("CreateNamedPipe failed with error: {}", get_last_error_as_string(errorCode));
             }
         }
 
@@ -137,7 +137,7 @@ namespace vfs {
             if (WaitNamedPipe(pipeName_.c_str(), timeoutInMs) == FALSE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("WaitNamedPipe failed with error: %s", get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("WaitNamedPipe failed with error: {}", get_last_error_as_string(errorCode));
                 return false;
             }
 
@@ -160,7 +160,7 @@ namespace vfs {
                 const auto errorCode = GetLastError();
                 if (errorCode != ERROR_OPERATION_ABORTED)
                 {
-                    vfs_errorf("ConnectNamedPipe failed with error: %s", get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("ConnectNamedPipe failed with error: {}", get_last_error_as_string(errorCode));
                 }
                 return false;
             }
@@ -175,7 +175,7 @@ namespace vfs {
             if (!PeekNamedPipe(pipeHandle_, nullptr, 0, nullptr, nullptr, &availableBytes))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("PeekNamedPipe failed with error: %s", get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("PeekNamedPipe failed with error: {}", get_last_error_as_string(errorCode));
             }
             return int64_t(availableBytes);
         }
@@ -191,7 +191,7 @@ namespace vfs {
                 const auto errorCode = GetLastError();
                 if (errorCode != ERROR_MORE_DATA && errorCode != ERROR_OPERATION_ABORTED)
                 {
-                    vfs_errorf("ReadFile(%s, %d) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("ReadFile({}, {}) failed with error: {}", pipeName_.str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode));
                     close();
                 }
             }
@@ -207,7 +207,7 @@ namespace vfs {
             if (!WriteFile(pipeHandle_, (LPCVOID)src, DWORD(sizeInBytes), &numberOfBytesWritten, nullptr))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("WriteFile(%s, %d) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("WriteFile({}, {}) failed with error: {}", pipeName_.str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode));
                 close();
             }
             return numberOfBytesWritten;

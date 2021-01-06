@@ -64,7 +64,7 @@ namespace vfs {
         {
             if (callback_ == nullptr)
             {
-                vfs_errorf("NULL callback specified to watcher %s", dir_.c_str());
+                vfs_errorf("NULL callback specified to watcher {}", dir_.str());
                 return false;
             }
 
@@ -73,7 +73,7 @@ namespace vfs {
             eventHandle_ = CreateEvent(nullptr, bManualReset, bInitialState, nullptr);
             if (eventHandle_ == nullptr)
             {
-                vfs_errorf("Could not create event for watcher %s", dir_.c_str());
+                vfs_errorf("Could not create event for watcher {}", dir_.str());
                 return false;
             }
 
@@ -104,7 +104,7 @@ namespace vfs {
             if (changeHandle_ == INVALID_HANDLE_VALUE)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %s", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
+                vfs_errorf("FindFirstChangeNotification function failed with error {} with specified path {}", get_last_error_as_string(errorCode), dir_.str());
                 return false;
             }
 
@@ -127,7 +127,7 @@ namespace vfs {
             const auto success = SetEvent(eventHandle_);
             if (success == FALSE)
             {
-                vfs_errorf("Could not signal the event to wake up watcher %s", dir_.c_str());
+                vfs_errorf("Could not signal the event to wake up watcher {}", dir_.str());
             }
         }
 
@@ -164,7 +164,7 @@ namespace vfs {
                     break;
 
                 default:
-                    vfs_errorf("Unhandled dwWaitStatus %x.", dwWaitStatus);
+                    vfs_errorf("Unhandled dwWaitStatus {}.", dwWaitStatus);
                     return;
                 }
 
@@ -176,7 +176,7 @@ namespace vfs {
                 while (FindNextChangeNotification(changeHandle_) == FALSE)
                 {
                     const auto errorCode = GetLastError();
-                    vfs_warningf("FindNextChangeNotification function failed with error code %s.", get_last_error_as_string(errorCode).c_str());
+                    vfs_warningf("FindNextChangeNotification function failed with error code {}.", get_last_error_as_string(errorCode));
                     std::this_thread::sleep_for(std::chrono::seconds(1));
 
                     FindCloseChangeNotification(changeHandle_);
@@ -188,7 +188,7 @@ namespace vfs {
 
                     if (--attempts == 0)
                     {
-                        vfs_errorf("FindNextChangeNotification kept failing afer %d attempts.", max_attempts);
+                        vfs_errorf("FindNextChangeNotification kept failing afer {} attempts.", max_attempts);
                         return;
                     }
                 }

@@ -10,6 +10,9 @@
 namespace vfs {
 
     //--------------------------------------------------------------------------------------------------
+    using string = std::conditional_t<VFS_USE_UNICODE, std::wstring, std::string>;
+
+    //--------------------------------------------------------------------------------------------------
     inline std::string wstring_to_string(const std::wstring &toConvert)
     {
         using convert_type = std::codecvt_utf8<wchar_t>;

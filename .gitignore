@@ -4,3 +4,5 @@ temp/
 projects/vs2017/.vs/
 bin/
 *.user
+projects/vs2019/.vs/
+*.args.json
