@@ -11,6 +11,12 @@
     <Filter Include="include\_interface">
       <UniqueIdentifier>{31453411-beef-4fd8-9bb4-48496b198bc1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\_impl\win">
+      <UniqueIdentifier>{996db9ae-193e-450d-aaba-aa6bf9b9f075}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\_impl\posix">
+      <UniqueIdentifier>{1ca1daad-4447-4a28-93a3-01650fbfd232}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\vfs.hpp" />
@@ -20,17 +26,8 @@
     <ClInclude Include="..\..\include\vfs\platform.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_file.hpp">
-      <Filter>include\_impl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_file_view.hpp">
-      <Filter>include\_impl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\vfs\path.hpp">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_directory.hpp">
-      <Filter>include\_impl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\directory_interface.hpp">
       <Filter>include\_interface</Filter>
@@ -59,9 +56,6 @@
     <ClInclude Include="..\..\include\vfs\watcher_interface.hpp">
       <Filter>include\_interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_watcher.hpp">
-      <Filter>include\_impl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\vfs\watcher.hpp">
       <Filter>include</Filter>
     </ClInclude>
@@ -80,23 +74,53 @@
     <ClInclude Include="..\..\include\vfs\pipe_interface.hpp">
       <Filter>include\_interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_pipe.hpp">
-      <Filter>include\_impl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_file_flags.hpp">
-      <Filter>include\_impl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\vfs\win_virtual_allocator.hpp">
-      <Filter>include\_impl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\vfs\virtual_allocator_interface.hpp">
       <Filter>include\_interface</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\vfs\virtual_allocator.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_directory.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_file.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_file_flags.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_file_view.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\vfs\win_move.hpp">
-      <Filter>include\_impl</Filter>
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_pipe.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_virtual_allocator.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_watcher.hpp">
+      <Filter>include\_impl\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_directory.hpp">
+      <Filter>include\_impl\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_file.hpp">
+      <Filter>include\_impl\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_file_view.hpp">
+      <Filter>include\_impl\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_move.hpp">
+      <Filter>include\_impl\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_virtual_allocator.hpp">
+      <Filter>include\_impl\posix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_watcher.hpp">
+      <Filter>include\_impl\posix</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

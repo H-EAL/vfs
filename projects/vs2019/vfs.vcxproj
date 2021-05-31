@@ -98,6 +98,12 @@
     <ClInclude Include="..\..\include\vfs\pipe.hpp" />
     <ClInclude Include="..\..\include\vfs\pipe_interface.hpp" />
     <ClInclude Include="..\..\include\vfs\platform.hpp" />
+    <ClInclude Include="..\..\include\vfs\posix_directory.hpp" />
+    <ClInclude Include="..\..\include\vfs\posix_file.hpp" />
+    <ClInclude Include="..\..\include\vfs\posix_file_view.hpp" />
+    <ClInclude Include="..\..\include\vfs\posix_move.hpp" />
+    <ClInclude Include="..\..\include\vfs\posix_virtual_allocator.hpp" />
+    <ClInclude Include="..\..\include\vfs\posix_watcher.hpp" />
     <ClInclude Include="..\..\include\vfs\shared_memory.hpp" />
     <ClInclude Include="..\..\include\vfs\stream_interface.hpp" />
     <ClInclude Include="..\..\include\vfs\string_utils.hpp" />
