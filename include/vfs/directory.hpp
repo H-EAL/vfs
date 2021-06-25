@@ -117,7 +117,7 @@ namespace vfs {
         {
             const auto &srcPath = d.getPath();
             const auto &dstPath = path::combine(dst, extract_file_name(srcPath));
-            move_directory(srcPath, dstPath);
+            move_directory(srcPath, dstPath, overwrite);
         }
 
         // Delete the source directory (should be empty by now).
