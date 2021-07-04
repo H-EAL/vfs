@@ -43,11 +43,7 @@ namespace vfs {
         {
             flush();
             unmap();
-
-            if (spFile_ == nullptr)
-            {
-                CloseHandle(fileMappingHandle_);
-            }
+            CloseHandle(fileMappingHandle_);
         }
 
 		//------------------------------------------------------------------------------------------
@@ -55,43 +51,39 @@ namespace vfs {
         {
             const auto access = spFile_ ? spFile_->fileAccess() : file_access::read_write;
 
-            if (spFile_)
+            if (openExisting)
             {
-                if (!spFile_->createMapping(viewSize))
-                {
-                    return false;
-                }
-
-                fileMappingHandle_  = spFile_->nativeFileMappingHandle();
-                fileTotalSize_      = spFile_->size();
+                fileMappingHandle_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name_.c_str());
             }
             else
             {
-                if (openExisting)
-                {
-                    fileMappingHandle_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name_.c_str());
-                }
-                else
-                {
-                    fileMappingHandle_ = CreateFileMapping
-                    (
-                        INVALID_HANDLE_VALUE,
-                        nullptr,
-                        PAGE_READWRITE /*| SEC_RESERVE*/,                           //SEC_RESERVE allows extensions on shared memory cases
-                        DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
-                        name_.c_str()
-                    );
-                }
+                const auto fileHandle   = spFile_ ? spFile_->nativeHandle() : INVALID_HANDLE_VALUE;
+                const auto protect      = DWORD((access == file_access::read_only) ? PAGE_READONLY : PAGE_READWRITE);
 
-                if (fileMappingHandle_ == nullptr)
-                {
-                    const auto errorCode = GetLastError();
-                    vfs_errorf("%sFileMapping(%s) failed with error: %s", openExisting ? "Open" : "Create", name_.c_str(), get_last_error_as_string(errorCode).c_str());
-                    return false;
-                }
-
-                fileTotalSize_ = viewSize;
+                fileMappingHandle_ = CreateFileMapping
+                (
+                    // Handle to the file to map
+                    fileHandle,
+                    // Security attributes
+                    nullptr,
+                    // Page protection level
+                    protect /*| SEC_RESERVE*/,                           //SEC_RESERVE allows extensions on shared memory cases
+                    // Mapping size, whole file if 0
+                    DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
+                    // File mapping object name for system wide objects
+                    spFile_ ? nullptr : name_.c_str()
+                );
             }
+
+            fileTotalSize_ = spFile_ ? spFile_->size() : viewSize;
+
+            if (fileMappingHandle_ == nullptr)
+            {
+                const auto errorCode = GetLastError();
+                vfs_errorf("%sFileMapping(%s) failed with error: %s", openExisting ? "Open" : "Create", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                return false;
+            }
+
 
             const auto fileMapAccess = (
                 (access == file_access::read_only)
