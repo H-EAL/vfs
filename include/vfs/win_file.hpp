@@ -151,9 +151,18 @@ namespace vfs {
             return fileSize;
         }
 
-        bool resize()
+        bool resize(int64_t newSize)
         {
             vfs_check(isValid());
+
+            auto liDistanceToMove = LARGE_INTEGER{};
+            liDistanceToMove.QuadPart = newSize;
+            if (!SetFilePointerEx(fileHandle_, liDistanceToMove, nullptr, FILE_BEGIN))
+            {
+                const auto errorCode = GetLastError();
+                vfs_errorf("SetFilePointerEx(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                return false;
+            }
 
             if (!SetEndOfFile(fileHandle_))
             {
