@@ -28,14 +28,14 @@ namespace vfs {
         }
 
         //------------------------------------------------------------------------------------------
-        win_file_view(const path &name, int64_t size, bool openExistent)
+        win_file_view(const path &name, int64_t size, bool openExisting)
             : name_(name)
             , fileMappingHandle_(nullptr)
             , pData_(nullptr)
             , pCursor_(nullptr)
             , mappedTotalSize_(size)
         {
-            map(size, openExistent);
+            map(size, openExisting);
         }
 
 		//------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ namespace vfs {
         }
 
 		//------------------------------------------------------------------------------------------
-        bool map(int64_t viewSize, bool openExistent)
+        bool map(int64_t viewSize, bool openExisting)
         {
             const auto access = spFile_ ? spFile_->fileAccess() : file_access::read_write;
 
@@ -67,7 +67,7 @@ namespace vfs {
             }
             else
             {
-                if (openExistent)
+                if (openExisting)
                 {
                     fileMappingHandle_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, name_.c_str());
                 }
@@ -77,7 +77,7 @@ namespace vfs {
                     (
                         INVALID_HANDLE_VALUE,
                         nullptr,
-                        PAGE_READWRITE,
+                        PAGE_READWRITE /*| SEC_RESERVE*/,                           //SEC_RESERVE allows extensions on shared memory cases
                         DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
                         name_.c_str()
                     );
@@ -86,7 +86,7 @@ namespace vfs {
                 if (fileMappingHandle_ == nullptr)
                 {
                     const auto errorCode = GetLastError();
-                    vfs_errorf("%sFileMapping(%ws) failed with error: %s", openExistent ? "Open" : "Create", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("%sFileMapping(%s) failed with error: %s", openExisting ? "Open" : "Create", name_.c_str(), get_last_error_as_string(errorCode).c_str());
                     return false;
                 }
 
@@ -102,13 +102,14 @@ namespace vfs {
                 )
             );
 
-            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(fileMappingHandle_, fileMapAccess, 0, 0, 0));
+            // map only allocated size, and allow extension on shared memory
+            pData_ = reinterpret_cast<uint8_t*>(MapViewOfFile(fileMappingHandle_, fileMapAccess, 0, 0, viewSize));
             pCursor_ = pData_;
 
             if (pData_ == nullptr)
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("MapViewOfFile(%ws) failed with error: %s", name_.c_str(), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("MapViewOfFile(%s) failed with error: %s", name_.c_str(), get_last_error_as_string(errorCode).c_str());
                 return false;
             }
 
@@ -213,6 +214,12 @@ namespace vfs {
                 return true;
             }
             return false;
+        }
+
+		//------------------------------------------------------------------------------------------
+        auto getFile() const
+        {
+            return spFile_;
         }
 
 	private:
