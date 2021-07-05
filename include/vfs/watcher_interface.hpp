@@ -26,6 +26,13 @@ namespace vfs {
             : base_type(dir, callback)
         {}
 
+        //------------------------------------------------------------------------------------------
+        ~watcher_interface()
+        {
+            stopWatching();
+            wait();
+        }
+
     public:
         //------------------------------------------------------------------------------------------
         bool startWatching(bool folders, bool files)
