@@ -1,12 +1,9 @@
 
 TEST_CASE("Directory.", "[directory]")
 {
-    std::filesystem::remove_all(test_directory + "\\foo");
-    std::filesystem::remove_all(test_directory + "\\test");
-
     SECTION("vfs::directory::exists works as intended")
     {
-        std::filesystem::create_directories(test_directory + "\\test\\pi\\ka\\chu");
+        std::filesystem::create_directories(test_directory + "/test/pi/ka/chu");
 
         REQUIRE(vfs::directory::exists(test_directory + "\\test"));
         REQUIRE(vfs::directory::exists(test_directory + "\\test\\pi"));
