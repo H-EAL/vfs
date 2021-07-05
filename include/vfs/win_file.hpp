@@ -27,11 +27,6 @@ namespace vfs {
             return fileHandle_;
         }
 
-        native_handle nativeFileMappingHandle() const
-        {
-            return fileMappingHandle_;
-        }
-
         const path& fileName() const
         {
             return fileName_;
@@ -53,7 +48,6 @@ namespace vfs {
         )
             : fileName_(name)
             , fileHandle_(INVALID_HANDLE_VALUE)
-            , fileMappingHandle_(nullptr)
             , fileAccess_(access)
         {
             fileHandle_ = CreateFile
@@ -123,14 +117,8 @@ namespace vfs {
             return fileHandle_ != INVALID_HANDLE_VALUE;
         }
 
-        bool isMapped() const
-        {
-            return fileMappingHandle_ != nullptr;
-        }
-
         void close()
         {
-            closeMapping();
             if (isValid())
             {
                 CloseHandle(fileHandle_);
@@ -214,46 +202,9 @@ namespace vfs {
             return numberOfBytesWritten;
         }
 
-        bool createMapping(int64_t viewSize)
-        {
-            const auto protect = DWORD((fileAccess_ == file_access::read_only) ? PAGE_READONLY : PAGE_READWRITE);
-            fileMappingHandle_ = CreateFileMapping
-            (
-                // Handle to the file to map
-                fileHandle_,
-                // Security attributes
-                nullptr,
-                // Page protection level
-                protect,
-                // Mapping size, whole file if 0
-                DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
-                // File mapping object name for system wide objects, unsupported for now
-                nullptr
-            );
-
-            if (fileMappingHandle_ == nullptr)
-            {
-                const auto errorCode = GetLastError();
-                vfs_errorf("CreateFileMapping(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
-                return false;
-            }
-
-            return true;
-        }
-
-        void closeMapping()
-        {
-            if (isMapped())
-            {
-                CloseHandle(fileMappingHandle_);
-                fileMappingHandle_ = nullptr;
-            }
-        }
-
     private:
         path        fileName_;
         HANDLE      fileHandle_;
-        HANDLE      fileMappingHandle_;
         file_access fileAccess_;
     };
     //----------------------------------------------------------------------------------------------

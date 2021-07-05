@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <locale>
 #include <codecvt>
 #include <algorithm>
 
@@ -76,7 +77,7 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     inline std::string to_lower_case(std::string str)
     {
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        std::transform(str.begin(), str.end(), str.begin(), [](char c) { return char(::tolower(c)); });
         return str;
     }
 
@@ -88,9 +89,9 @@ namespace vfs {
         std::vector<_StringType> tokens;
 
         // Skip delimiters at beginning.
-        _StringType::size_type lastPos = str.find_first_not_of(delimiters, 0);
+        auto lastPos = str.find_first_not_of(delimiters, 0);
         // Find first "non-delimiter".
-        _StringType::size_type pos = str.find_first_of(delimiters, lastPos);
+        auto pos = str.find_first_of(delimiters, lastPos);
 
         while (_StringType::npos != pos || _StringType::npos != lastPos)
         {

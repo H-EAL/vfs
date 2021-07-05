@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vfs/platform.hpp"
 #include "vfs/string_utils.hpp"
 
 
@@ -20,11 +21,15 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         path(const std::string &p)
             : pathStr_(converter_type::to_native(p))
-        {}
+        {
+            sanitize();
+        }
         //------------------------------------------------------------------------------------------
         path(const std::wstring &p)
             : pathStr_(converter_type::to_native(p))
-        {}
+        {
+            sanitize();
+        }
         //------------------------------------------------------------------------------------------
         path(const char *p)
             : path(std::string{ p })
@@ -38,7 +43,27 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         static auto separator()
         {
-            static const auto path_separator = converter_type::to_native("\\");
+            static const auto path_separator = converter_type::to_native
+            (
+            #if VFS_PLATFORM_WIN
+                "\\"
+            #else
+                "/"
+            #endif
+            );
+            return path_separator;
+        }
+        //------------------------------------------------------------------------------------------
+        static auto anti_separator()
+        {
+            static const auto path_separator = converter_type::to_native
+            (
+            #if VFS_PLATFORM_WIN
+                "/"
+            #else
+                "\\"
+            #endif
+            );
             return path_separator;
         }
         //------------------------------------------------------------------------------------------
@@ -62,6 +87,13 @@ namespace vfs {
         const auto c_str() const { return str().c_str(); }
 
     public:
+        //------------------------------------------------------------------------------------------
+        // Sanitize path separators.
+        void sanitize()
+        {
+            std::replace(pathStr_.begin(), pathStr_.end(), anti_separator()[0], separator()[0]);
+        }
+
         //------------------------------------------------------------------------------------------
         // Combines an undetermined amount of paths using the system native separator.
         template<typename... _Paths>
@@ -101,33 +133,5 @@ namespace vfs {
         // String representation of the actual file or directory path.
         string_type pathStr_;
     };
-
-
-    //----------------------------------------------------------------------------------------------
-    // Moves a file or a directory from src path to dst path.
-    // If src path is a directory, src and dst paths must be on the same drive.
-    inline bool move(const path &src, const path &dst, bool overwrite = false, int32_t maxAttempts = 1)
-    {
-        // When moving a file, the destination can be on a different file system or volume.
-        // If the destination is on another drive, you must set the MOVEFILE_COPY_ALLOWED flag in dwFlags.
-        auto flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH;
-        if (overwrite)
-        {
-            flags |= MOVEFILE_REPLACE_EXISTING;
-        }
-
-        auto attempts = 0;
-        while (MoveFileEx(src.c_str(), dst.c_str(), flags) == FALSE)
-        {
-            if (++attempts == maxAttempts)
-            {
-                const auto errorCode = GetLastError();
-                vfs_errorf("MoveFileEx(%ws, %ws, MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) failed after %d attempts, returned error: %s", src.c_str(), dst.c_str(), attempts, get_last_error_as_string(errorCode).c_str());
-                return false;
-            }
-        }
-
-        return true;
-    }
 
 } /*vfs*/

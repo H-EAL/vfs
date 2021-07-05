@@ -7,11 +7,14 @@
 // Platform specific implementations
 #if VFS_PLATFORM_WIN
 #	include "vfs/win_directory.hpp"
+#elif VFS_PLATFORM_POSIX
+#   include "vfs/posix_directory.hpp"
 #else
 #	error No directory implementation defined for the current platform
 #endif
 
 #include "vfs/path.hpp"
+#include "vfs/file.hpp"
 
 
 namespace vfs {
@@ -31,10 +34,15 @@ namespace vfs {
 
         size_t i = 0;
         std::string currentPath;
-        const auto pathStr = p.str();
+        const auto &pathStr = p.str();
+        // Test for absolute paths.
+        if ((pathStr.length() >= 1) && pathStr[0] == '/')
+        {
+            currentPath = "/";
+        }
         // Test for remote location.
         // Those will look like \\foo\bar\ where foo is the remote computer.
-        if ((pathStr.length() >= 2) && pathStr[0] == '\\' && pathStr[1] == '\\')
+        else if ((pathStr.length() >= 2) && pathStr[0] == '\\' && pathStr[1] == '\\')
         {
             // The first folder will contain the name of the remote computer.
             currentPath = path::combine(path::separator(), path::separator(), folders[0], path::separator());
@@ -66,40 +74,46 @@ namespace vfs {
     }
 
     //----------------------------------------------------------------------------------------------
-    inline bool delete_directory(const path &dirPath)
+    inline bool delete_directory(const path &dirPath, bool recursivelyDeleteFiles = false)
     {
-        bool success = true;
         auto dir = directory(dirPath);
         dir.scan();
+
+        if (recursivelyDeleteFiles)
+        {
+            for (const auto &f : dir.getFiles())
+            {
+                file::delete_file(f);
+            }
+        }
+
         for (const auto &subDir : dir.getSubDirectories())
         {
-            success = success && delete_directory(subDir.getPath());
+            delete_directory(subDir.getPath(), recursivelyDeleteFiles);
         }
-        directory::delete_directory(dirPath);
-//             for (const auto &f : dir.getFiles())
-//             {
-//                 file::delete_file(f);
-//             }
-        return success;
+
+        return directory::delete_directory(dirPath);
     }
     
     //----------------------------------------------------------------------------------------------
-    inline bool move_directory(const path &src, const path &dst)
+    inline bool move_directory(const path &src, const path &dst, bool overwrite = false)
     {
         if (!directory::exists(src))
         {
-            vfs_errorf("Source directory doesn't exists: %ws", src.c_str());
+            vfs_errorf("Source directory doesn't exists: %s", src.c_str());
             return false;
         }
 
-        if (directory::exists(dst))
+        if (!directory::exists(dst))
         {
-            vfs_errorf("Destination directory already exists: %ws", dst.c_str());
-            return false;
+            if (!directory::create_directory(dst))
+            {
+                return false;
+            }
         }
-
-        if (!directory::create_directory(dst))
+        else if (!overwrite)
         {
+            vfs_errorf("Destination directory already exists: %s", dst.c_str());
             return false;
         }
 
@@ -110,7 +124,7 @@ namespace vfs {
         for (const auto &srcPath : dir.getFiles())
         {
             const auto &dstPath = path::combine(dst, extract_file_name(srcPath));
-            move(srcPath, dstPath);
+            file::move(srcPath, dstPath, overwrite);
         }
         // Recursively create the sub directories hierarchy.
         for (auto &d : dir.getSubDirectories())

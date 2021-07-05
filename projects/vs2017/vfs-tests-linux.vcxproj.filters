@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{233938ad-71c3-44e5-9beb-bbdd181bb5c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\vfs">
+      <UniqueIdentifier>{4ed52b57-ec61-4cdf-bcd4-6d9bbbb6fcc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests">
+      <UniqueIdentifier>{95e1f141-c52a-44cb-a2d3-227dd5ac9f1d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\vfs.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\directory.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\directory_interface.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file_flags.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file_interface.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file_view.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\file_view_interface.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\logging.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\path.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\platform.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\shared_memory.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\stream_interface.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\string_utils.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\virtual_array.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\watcher.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\watcher_interface.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_directory.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_file.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_file_view.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_watcher.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_directory.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_file.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_file_view.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_watcher.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\win_move.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\vfs\posix_move.hpp">
+      <Filter>include\vfs</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\tests\vfs_tests.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

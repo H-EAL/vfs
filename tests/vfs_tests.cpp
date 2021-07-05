@@ -3,7 +3,7 @@
 #include "vfs.hpp"
 
 
-int wmain(int argc, wchar_t *argv[])
+int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
@@ -29,7 +29,7 @@ int wmain(int argc, wchar_t *argv[])
             }
 
             const auto pSrc = vfs::path(".\\foo");
-            const auto pDst = vfs::path("E:\\foo_copy");
+            const auto pDst = vfs::path(".\\foo_copy");
             vfs::move_directory(pSrc, pDst);
         }
         auto dir = vfs::directory(filePath);
@@ -39,13 +39,13 @@ int wmain(int argc, wchar_t *argv[])
             std::cout << vfs::wstring_to_string(newDir) << std::endl;
         });
         watcher.startWatching(true, true);
-        Sleep(60000);
+        std::this_thread::sleep_for(std::chrono::seconds(30));
         watcher.stopWatching();
         watcher.wait();
     }
     else if (vfs::file::exists(filePath))
     {
-        const auto &fv = vfs::open_read_only_view(filePath, vfs::file_creation_options::open_if_existant);
+        const auto &fv = vfs::open_read_only_view(filePath, vfs::file_creation_options::open_if_existing);
         std::cout.write(fv->cursor<const char>(), fv->totalSize());
     }
     return EXIT_SUCCESS;

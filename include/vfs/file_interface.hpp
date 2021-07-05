@@ -10,7 +10,7 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     template<typename _Impl>
     class file_interface
-        : _Impl
+        : public _Impl
     {
     public:
         //------------------------------------------------------------------------------------------
@@ -38,6 +38,16 @@ namespace vfs {
         static bool exists(const path &filePath)
         {
             return base_type::exists(filePath);
+        }
+        //------------------------------------------------------------------------------------------
+        static uint64_t get_last_write_time(const path &filePath)
+        {
+            return base_type::get_last_write_time(filePath);
+        }
+        //------------------------------------------------------------------------------------------
+        static void delete_file(const path &filePath)
+        {
+            return base_type::delete_file(filePath);
         }
 
     public:
@@ -87,6 +97,11 @@ namespace vfs {
         int64_t write(const uint8_t *src, int64_t sizeInBytes)
         {
             return base_type::write(src, sizeInBytes);
+        }
+        //------------------------------------------------------------------------------------------
+        bool resize(int64_t newSize)
+        {
+            return base_type::resize(newSize);
         }
     };
     //----------------------------------------------------------------------------------------------

@@ -2,49 +2,68 @@
 
 #include "vfs/path.hpp"
 #include "vfs/file_flags.hpp"
+#include "vfs/stream_interface.hpp"
 
 
 namespace vfs {
 
     //----------------------------------------------------------------------------------------------
     template<typename _Impl>
-    class file_view_interface
-        : _Impl
+    class pipe_interface
+        : public _Impl
     {
     public:
         //------------------------------------------------------------------------------------------
         using base_type = _Impl;
-        using self_type = file_view_interface<_Impl>;
+        using self_type = pipe_interface<_Impl>;
+        
+        //------------------------------------------------------------------------------------------
+        using native_handle = typename base_type::native_handle;
 
     public:
         //------------------------------------------------------------------------------------------
-        file_view_interface(file_sptr spFile, int64_t viewSize)
-            : base_type(std::move(spFile), viewSize)
-        {}
-        //------------------------------------------------------------------------------------------
-        file_view_interface(file_sptr spFile)
-            : file_view_interface(std::move(spFile), 0ull)
-        {}
-        //------------------------------------------------------------------------------------------
-        file_view_interface(const path &name, int64_t size, bool openExisting)
-            : base_type(name, size, openExisting)
+        pipe_interface
+        (
+            const path              &pipePath,
+            file_access             access,
+            file_flags              flags       = file_flags::none,
+            file_attributes         attributes  = file_attributes::normal
+        )
+            : base_type(pipePath, access, flags, attributes)
         {}
 
         //------------------------------------------------------------------------------------------
-        bool isValid() const
+        pipe_interface
+        (
+            const path &pipePath,
+            pipe_access pipeAccess
+        )
+            : base_type(pipePath, pipeAccess)
+        {}
+
+    public:
+        //------------------------------------------------------------------------------------------
+        native_handle nativeHandle() const
         {
-            return base_type::isValid();
+            return base_type::nativeHandle();
+        }
+		//------------------------------------------------------------------------------------------
+		bool isValid()
+		{
+			return base_type::isValid();
+		}
+
+    public:
+        //------------------------------------------------------------------------------------------
+        bool waitForConnection()
+        {
+            return base_type::waitForConnection();
         }
 
         //------------------------------------------------------------------------------------------
-        file_sptr getFile() const
+        int64_t availableBytesToRead() const
         {
-            return base_type::getFile();
-        }
-        //------------------------------------------------------------------------------------------
-        int64_t totalSize() const
-        {
-            return base_type::totalSize();
+            return base_type::availableBytesToRead();
         }
 
         //------------------------------------------------------------------------------------------
@@ -56,23 +75,6 @@ namespace vfs {
         int64_t write(const uint8_t *src, int64_t sizeInBytes)
         {
             return base_type::write(src, sizeInBytes);
-        }
-
-        //------------------------------------------------------------------------------------------
-        bool skip(int64_t offsetInBytes)
-        {
-            return base_type::skip(offsetInBytes);
-        }
-        //------------------------------------------------------------------------------------------
-        template<typename T = uint8_t>
-        auto cursor()
-        {
-            return base_type::template cursor<T>();
-        }
-        //------------------------------------------------------------------------------------------
-        uint8_t* cursor()
-        {
-            return cursor<>();
         }
     };
     //----------------------------------------------------------------------------------------------

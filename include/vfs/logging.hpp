@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstring>
 #include <cassert>
 
 #include "vfs/platform.hpp"
@@ -8,16 +9,16 @@
 
 #ifndef VFS_DISABLE_DEFAULT_ERROR_HANDLING
 
-    #define vfs_infof(MSG, ...)         fprintf(stderr, "[ info     ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_infof(MSG, ...)         fprintf(stderr, "[ info     ] "  MSG  "\n", ##__VA_ARGS__)
     #define vfs_info(MSG)               vfs_infof(MSG,)
 
-    #define vfs_warningf(MSG, ...)      fprintf(stderr, "[ warning  ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_warningf(MSG, ...)      fprintf(stderr, "[ warning  ] "  MSG  "\n", ##__VA_ARGS__)
     #define vfs_warning(MSG)            vfs_warningf(MSG,)
 
-    #define vfs_errorf(MSG, ...)        fprintf(stderr, "[ error    ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_errorf(MSG, ...)        fprintf(stderr, "[ error    ] "  MSG  "\n", ##__VA_ARGS__)
     #define vfs_error(MSG)              vfs_errorf(MSG,)
 
-    #define vfs_criticalf(MSG, ...)     fprintf(stderr, "[ critical ] " ## MSG ## "\n", ##__VA_ARGS__)
+    #define vfs_criticalf(MSG, ...)     fprintf(stderr, "[ critical ] "  MSG  "\n", ##__VA_ARGS__)
     #define vfs_critical(MSG)           vfs_criticalf(MSG,)
 
     #define vfs_check(EXPR)             assert(EXPR)
@@ -25,7 +26,7 @@
 #endif // VFS_DISABLE_DEFAULT_ERROR_HANDLING
 
 
-#if defined(VFS_PLATFORM_WIN)
+#if VFS_PLATFORM_WIN
 
     //----------------------------------------------------------------------------------------------
     // Returns the last Win32 error, in string format. Returns an empty string if there is no error.
@@ -47,6 +48,22 @@
 
         return message;
     }
-    //----------------------------------------------------------------------------------------------
+    
+#elif VFS_PLATFORM_POSIX
 
-#endif // defined(VFS_PLATFORM_WIN) && !defined(VFS_DISABLE_SAFE_WIN_CALLS)
+    //----------------------------------------------------------------------------------------------
+    inline std::string get_last_error_as_string(int errorCode)
+    {
+        auto message = std::string{};
+        
+        if (errorCode != 0)
+        {
+            constexpr auto MESSAGE_LENGTH = 1024;
+            message.resize(MESSAGE_LENGTH);
+            strerror_r(errorCode, &message[0], MESSAGE_LENGTH);
+        }
+        
+        return message;
+    }
+
+#endif

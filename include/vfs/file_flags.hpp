@@ -7,9 +7,9 @@ namespace vfs {
 
     enum class file_creation_options
     {
-        create_if_nonexistant,
+        create_if_nonexisting,
         create_or_overwrite,
-        open_if_existant,
+        open_if_existing,
         open_or_create,
         truncate_existing
     };
@@ -26,7 +26,8 @@ namespace vfs {
     {
         none                = 0,
         sequential_scan     = 1 << 0,
-        delete_on_close     = 1 << 1
+        delete_on_close     = 1 << 1,
+        write_through       = 1 << 2
     };
 
     enum class file_attributes : uint32_t
@@ -41,6 +42,13 @@ namespace vfs {
         read_only,
         write_only,
         read_write,
+    };
+
+    enum class pipe_access : uint32_t
+    {
+        inbound,
+        outbound,
+        duplex,
     };
 
 } /*vfs*/

@@ -21,13 +21,17 @@
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 #	undef  VFS_PLATFORM_POSIX
 #	define VFS_PLATFORM_POSIX	(1)
+#   include <sys/types.h>
+#   include <sys/stat.h>
+#   include <unistd.h>
+#   include <fcntl.h>
 #endif
 
 // Determine if the platform is using Unicode or not
 #if defined(UNICODE)
-#   define VFS_USE_UNICODE         (1)
+#   define VFS_USE_UNICODE      (1)
 #else
-#   define VFS_USE_UNICODE         (0)
+#   define VFS_USE_UNICODE      (0)
 #endif
 
 

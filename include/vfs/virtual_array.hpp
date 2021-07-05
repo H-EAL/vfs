@@ -5,6 +5,7 @@
 #include <atomic>
 
 #include "vfs/logging.hpp"
+#include "vfs/virtual_allocator.hpp"
 
 
 namespace vfs {
@@ -55,8 +56,7 @@ namespace vfs {
         private:
             void goToNextValidIndex()
             {
-                while (currentIndex_ < arr_.lastValidIndex_
-                    && (arr_.pControlRegister_[currentIndex_ / 64] & (1ull << (currentIndex_ % 64))) == 0)
+                while ((currentIndex_ < arr_.lastValidIndex_) && !arr_.isIndexValid(currentIndex_))
                 {
                     ++currentIndex_;
                 }
@@ -102,8 +102,7 @@ namespace vfs {
         private:
             void goToNextValidIndex()
             {
-                while (currentIndex_ < arr_.lastValidIndex_
-                    && (arr_.pControlRegister_[currentIndex_ / 64] & (1ull << (currentIndex_ % 64))) == 0)
+                while ((currentIndex_ < arr_.lastValidIndex_) && !arr_.isIndexValid(currentIndex_))
                 {
                     ++currentIndex_;
                 }
@@ -160,11 +159,12 @@ namespace vfs {
                     }
                 }
             }
+            
+            virtual_allocator::deallocate(pArray_);
+            virtual_allocator::deallocate(pControlRegister_);
 
-            VirtualFree(pArray_, 0, MEM_RELEASE);
-            VirtualFree(pControlRegister_, 0, MEM_RELEASE);
-            pArray_ = nullptr;
-            pControlRegister_ = nullptr;
+            pArray_             = nullptr;
+            pControlRegister_   = nullptr;
         }
 
         //------------------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ namespace vfs {
             if (this != &other)
             {
                 swap(other);
-                other.~virtual_array();
+                other.reset();
             }
             return (*this);
         }
@@ -223,6 +223,19 @@ namespace vfs {
         }
 
         //------------------------------------------------------------------------------------------
+        bool isIndexValid(uint32_t index) const
+        {
+            return index < lastValidIndex_
+                && (pControlRegister_[index / 64] & (1ull << (index % 64))) != 0;
+        }
+
+        //------------------------------------------------------------------------------------------
+        uint32_t getLastValidIndex() const
+        {
+            return lastValidIndex_;
+        }
+
+        //------------------------------------------------------------------------------------------
         uint32_t size() const
         {
             return size_.load(std::memory_order_acquire);
@@ -240,53 +253,57 @@ namespace vfs {
             return pArray_[i];
         }
 
-    private:
+    private:    
         //------------------------------------------------------------------------------------------
         void init()
         {
-            pArray_ = reinterpret_cast<T*>(VirtualAlloc(nullptr, _MaxElementCount * sizeof(T), MEM_RESERVE, PAGE_READWRITE));
+            pArray_ = virtual_allocator::template reserve<T>(_MaxElementCount);
             vfs_check(pArray_ != nullptr);
-            pControlRegister_ = reinterpret_cast<std::atomic<uint64_t>*>(VirtualAlloc(nullptr, _MaxElementCount / sizeof(uint64_t), MEM_RESERVE, PAGE_READWRITE));
+
+            pControlRegister_ = virtual_allocator::reserve<std::atomic<uint64_t>>((_MaxElementCount / sizeof(uint64_t)) + 1);
             vfs_check(pControlRegister_ != nullptr);
+
             grow(1);
         }
 
         //------------------------------------------------------------------------------------------
         void reset()
         {
-            size_               = 0;
-            pArray_             = nullptr;
-            pageCount_          = 0;
-            nextFreeIndex_      = invalid_index;
-            lastValidIndex_     = 0;
-            pControlRegister_   = nullptr;
-            controlRegisterPageCount_ = 0;
+            size_                       = 0;
+            pArray_                     = nullptr;
+            pageCount_                  = 0;
+            nextFreeIndex_              = invalid_index;
+            lastValidIndex_             = 0;
+            pControlRegister_           = nullptr;
+            controlRegisterPageCount_   = 0;
         }
 
         //------------------------------------------------------------------------------------------
         void swap(virtual_array &other)
         {
-            std::swap(size_             , other.size_               );
-            std::swap(pArray_           , other.pArray_             );
-            std::swap(pageCount_        , other.pageCount_          );
-            std::swap(nextFreeIndex_    , other.nextFreeIndex_      );
-            std::swap(lastValidIndex_   , other.lastValidIndex_     );
-            std::swap(pControlRegister_ , other.pControlRegister_   );
-            std::swap(controlRegisterPageCount_ , other.controlRegisterPageCount_);
+            std::swap(size_                     , other.size_                       );
+            std::swap(pArray_                   , other.pArray_                     );
+            std::swap(pageCount_                , other.pageCount_                  );
+            std::swap(nextFreeIndex_            , other.nextFreeIndex_              );
+            std::swap(lastValidIndex_           , other.lastValidIndex_             );
+            std::swap(pControlRegister_         , other.pControlRegister_           );
+            std::swap(controlRegisterPageCount_ , other.controlRegisterPageCount_   );
         }
 
         //------------------------------------------------------------------------------------------
         void grow(uint32_t pageCount)
         {
-            auto pData = VirtualAlloc(reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size, pageCount * page_size, MEM_COMMIT, PAGE_READWRITE);
+            const auto pArrayOffset             = reinterpret_cast<uint8_t*>(pArray_) + pageCount_ * page_size;
+            [[maybe_unused]] const auto pData   = virtual_allocator::commit(pArrayOffset, pageCount * page_size);
             vfs_check(pData != nullptr);
             pageCount_ += pageCount;
 
             const auto neededControlRegisterPageCount = uint32_t(elements_per_page * pageCount_ / control_bits_per_page) + 1 - controlRegisterPageCount_;
             if (neededControlRegisterPageCount > 0)
             {
-                auto pData = VirtualAlloc(reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size, neededControlRegisterPageCount * page_size, MEM_COMMIT, PAGE_READWRITE);
-                vfs_check(pData != nullptr);
+                const auto pRegisterOffset      = reinterpret_cast<uint8_t*>(pControlRegister_) + controlRegisterPageCount_ * page_size;
+                [[maybe_unused]] const auto p   = virtual_allocator::commit(pRegisterOffset, neededControlRegisterPageCount * page_size);
+                vfs_check(p != nullptr);
                 controlRegisterPageCount_ += neededControlRegisterPageCount;
             }
         }
@@ -334,7 +351,7 @@ namespace vfs {
                 *reinterpret_cast<uint32_t*>(&pArray_[freeIndex]) = expectedNextFreeIndex;
             } while (!nextFreeIndex_.compare_exchange_strong(expectedNextFreeIndex, freeIndex, std::memory_order_acq_rel));
 
-            auto i = nextFreeIndex_.load();
+            [[maybe_unused]] const auto i = nextFreeIndex_.load();
             vfs_check(i < lastValidIndex_ || i == invalid_index);
         }
 
@@ -350,13 +367,12 @@ namespace vfs {
                 vfs_check(expectedNextFreeIndex < lastValidIndex_);
                 const auto nextNextFreeIndex = *reinterpret_cast<uint32_t*>(&pArray_[expectedNextFreeIndex]);
 
-                vfs_check(nextNextFreeIndex < lastValidIndex_ || nextNextFreeIndex == invalid_index);
                 if (nextFreeIndex_.compare_exchange_strong(expectedNextFreeIndex, nextNextFreeIndex, std::memory_order_acq_rel))
                 {
                     freeIndex = expectedNextFreeIndex;
                 }
 
-                auto i = nextFreeIndex_.load();
+                [[maybe_unused]] const auto i = nextFreeIndex_.load();
                 vfs_check(i < lastValidIndex_ || i == invalid_index);
             }
             return freeIndex;
@@ -373,5 +389,5 @@ namespace vfs {
         uint32_t                controlRegisterPageCount_;
         std::atomic<uint32_t>   nextFreeIndex_;
     };
-
-} /*ftl*/
+    
+} /*vfs*/
