@@ -1,14 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
+    <Filter Include="tests">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="tests\_tests">
+      <UniqueIdentifier>{2b6d5de8-bc7c-4871-ad81-51a111345b0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests\_catch">
+      <UniqueIdentifier>{83bde442-784f-4cca-91b5-453764092ef6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\tests\vfs_tests.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\tests\catch_amalgamated.cpp">
+      <Filter>tests\_catch</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\tests\directory_tests.hpp">
+      <Filter>tests\_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tests\file_tests.hpp">
+      <Filter>tests\_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tests\file_view_tests.hpp">
+      <Filter>tests\_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tests\move_tests.hpp">
+      <Filter>tests\_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tests\shared_memory_tests.hpp">
+      <Filter>tests\_tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tests\catch_amalgamated.hpp">
+      <Filter>tests\_catch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\tests\watcher_tests.hpp">
+      <Filter>tests\_tests</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
