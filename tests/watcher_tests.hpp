@@ -1,7 +1,7 @@
 
 TEST_CASE("Watcher.", "[watcher]")
 {
-    auto filePath                   = std::string(".\\test\\watcher");
+    auto filePath                   = std::string(test_directory + "\\test\\watcher");
     auto filesDirectoriesWatched    = std::unordered_set<std::string>();
     auto filesDirectoriesCreated    = std::unordered_set<std::string>();
 

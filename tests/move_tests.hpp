@@ -3,8 +3,8 @@ TEST_CASE("Move Directory.", "[movedirectory]")
 {
     SECTION("moving files and directories")
     {
-        auto src = vfs::path(".\\test\\fileview\\");
-        const auto dst = vfs::path(".\\test\\moved\\");
+        auto src = vfs::path(test_directory + "\\test\\fileview\\");
+        const auto dst = vfs::path(test_directory + "\\test\\moved\\");
 
         vfs::directory::create_directory(src.str() + "readonly\\subdir");
 
@@ -47,7 +47,7 @@ TEST_CASE("Move Directory.", "[movedirectory]")
         }
 
         // Change source path!
-        src = vfs::path(".\\test\\file\\");
+        src = vfs::path(test_directory + "\\test\\file\\");
 
         WHEN("we move a directory and overwrite = false")
         {

@@ -5,19 +5,19 @@ TEST_CASE("File.", "[file]")
     {
         SECTION("readonly")
         {
-            vfs::create_path(".\\test\\file\\readonly");
+            vfs::create_path(test_directory + "\\test\\file\\readonly");
 
             GIVEN("an existing file")
             {
                 // Read only 
                 {
-                    std::ofstream outfile(".\\test\\file\\readonly\\test0.txt");
+                    std::ofstream outfile(test_directory + "\\test\\file\\readonly\\test0.txt");
                     outfile.close();
                 }
 
                 WHEN("we open a file read_only with vfs::file::open_if_existing")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::open_if_existing);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -27,7 +27,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file read_only with vfs::file::create_or_overwrite")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -37,7 +37,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file read_only with vfs::file::open_or_create")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::open_or_create);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -47,7 +47,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file read_only with vfs::file::create_if_nonexisting")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
                     THEN("we fail")
                     {
                         // WE fail because we are trying to create a file that already exists.
@@ -61,45 +61,45 @@ TEST_CASE("File.", "[file]")
             {
                 WHEN("we open a file read_only with vfs::file::open_if_existing")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test1.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test1.txt"), vfs::file_creation_options::open_if_existing);
                     THEN("we fail")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(!spFile->isValid());
-                        REQUIRE(!vfs::file::exists(".\\test\\file\\readonly\\test1.txt"));
+                        REQUIRE(!vfs::file::exists(test_directory + "\\test\\file\\readonly\\test1.txt"));
                     }
                 }
 
                 WHEN("we open a file read_only with vfs::file::create_or_overwrite")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\readonly\\test1.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\readonly\\test1.txt"));
                     }
                 }
 
                 WHEN("we open a file read_only with vfs::file::open_or_create")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test2.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test2.txt"), vfs::file_creation_options::open_or_create);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\readonly\\test2.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\readonly\\test2.txt"));
                     }
                 }
 
                 WHEN("we open a file read_only with vfs::file::create_if_nonexisting")
                 {
-                    auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readonly\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readonly\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\readonly\\test3.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\readonly\\test3.txt"));
                     }
                 }
             }
@@ -107,19 +107,19 @@ TEST_CASE("File.", "[file]")
 
         SECTION("write only")
         {
-            vfs::create_path(".\\test\\file\\writeonly");
+            vfs::create_path(test_directory + "\\test\\file\\writeonly");
 
             GIVEN("an existing file")
             {
                 // Write only 
                 {
-                    std::ofstream outfile(".\\test\\file\\writeonly\\test0.txt");
+                    std::ofstream outfile(test_directory + "\\test\\file\\writeonly\\test0.txt");
                     outfile.close();
                 }
 
                 WHEN("we open a file write_only with vfs::file::open_if_existing")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::open_if_existing);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -129,7 +129,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file write_only with vfs::file::create_or_overwrite")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -139,7 +139,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file write_only with vfs::file::open_or_create")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::open_or_create);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -149,7 +149,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file write_only with vfs::file::create_if_nonexisting")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
                     THEN("we fail")
                     {
                         // WE fail because we are trying to create a file that already exists.
@@ -163,45 +163,45 @@ TEST_CASE("File.", "[file]")
             {
                 WHEN("we open a file write_only with vfs::file::open_if_existing")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test1.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test1.txt"), vfs::file_creation_options::open_if_existing);
                     THEN("we fail")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(!spFile->isValid());
-                        REQUIRE(!vfs::file::exists(".\\test\\file\\writeonly\\test1.txt"));
+                        REQUIRE(!vfs::file::exists(test_directory + "\\test\\file\\writeonly\\test1.txt"));
                     }
                 }
 
                 WHEN("we open a file write_only with vfs::file::create_or_overwrite")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\writeonly\\test1.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\writeonly\\test1.txt"));
                     }
                 }
 
                 WHEN("we open a file write_only with vfs::file::open_or_create")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test2.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test2.txt"), vfs::file_creation_options::open_or_create);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\writeonly\\test2.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\writeonly\\test2.txt"));
                     }
                 }
 
                 WHEN("we open a file write_only with vfs::file::create_if_nonexisting")
                 {
-                    auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\writeonly\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\writeonly\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\writeonly\\test3.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\writeonly\\test3.txt"));
                     }
                 }
             }
@@ -209,19 +209,19 @@ TEST_CASE("File.", "[file]")
 
         SECTION("read write")
         {
-            vfs::create_path(".\\test\\file\\readwrite");
+            vfs::create_path(test_directory + "\\test\\file\\readwrite");
 
             GIVEN("an existing file")
             {
                 // Read write 
                 {
-                    std::ofstream outfile(".\\test\\file\\readwrite\\test0.txt");
+                    std::ofstream outfile(test_directory + "\\test\\file\\readwrite\\test0.txt");
                     outfile.close();
                 }
 
                 WHEN("we open a file read_write with vfs::file::open_if_existing")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -231,7 +231,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file read_write with vfs::file::create_or_overwrite")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -241,7 +241,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file read_write with vfs::file::open_or_create")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_or_create);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
@@ -251,7 +251,7 @@ TEST_CASE("File.", "[file]")
 
                 WHEN("we open a file read_write with vfs::file::create_if_nonexisting")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
                     THEN("we fail")
                     {
                         // WE fail because we are trying to create a file that already exists.
@@ -265,45 +265,45 @@ TEST_CASE("File.", "[file]")
             {
                 WHEN("we open a file read_write with vfs::file::open_if_existing")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test1.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test1.txt"), vfs::file_creation_options::open_if_existing);
                     THEN("we fail")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(!spFile->isValid());
-                        REQUIRE(!vfs::file::exists(".\\test\\file\\readwrite\\test1.txt"));
+                        REQUIRE(!vfs::file::exists(test_directory + "\\test\\file\\readwrite\\test1.txt"));
                     }
                 }
 
                 WHEN("we open a file read_write with vfs::file::create_or_overwrite")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\readwrite\\test1.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\readwrite\\test1.txt"));
                     }
                 }
 
                 WHEN("we open a file read_write with vfs::file::open_or_create")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test2.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test2.txt"), vfs::file_creation_options::open_or_create);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\readwrite\\test2.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\readwrite\\test2.txt"));
                     }
                 }
 
                 WHEN("we open a file read_write with vfs::file::create_if_nonexisting")
                 {
-                    auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
                     THEN("we succeed")
                     {
                         REQUIRE(spFile != nullptr);
                         REQUIRE(spFile->isValid());
-                        REQUIRE(vfs::file::exists(".\\test\\file\\readwrite\\test3.txt"));
+                        REQUIRE(vfs::file::exists(test_directory + "\\test\\file\\readwrite\\test3.txt"));
                     }
                 }
             }
@@ -316,7 +316,7 @@ TEST_CASE("File.", "[file]")
         {
             WHEN("we open it with file_creation_options::open_if_existing")
             {
-                auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
+                auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
 
                 THEN("we succeed")
                 {
@@ -327,7 +327,7 @@ TEST_CASE("File.", "[file]")
             }
             WHEN("we open it with file_creation_options::create_or_overwrite")
             {
-                auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
+                auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
 
                 THEN("we succeed and the file is overwritten")
                 {
@@ -337,7 +337,7 @@ TEST_CASE("File.", "[file]")
             }
             WHEN("we open it with file_creation_options::create_if_nonexisting")
             {
-                auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
+                auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
 
                 THEN("we fail")
                 {
@@ -350,7 +350,7 @@ TEST_CASE("File.", "[file]")
         {
             WHEN("we open it with file_creation_options::open_if_existing")
             {
-                auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test5.txt"), vfs::file_creation_options::open_if_existing);
+                auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test5.txt"), vfs::file_creation_options::open_if_existing);
 
                 THEN("we fail")
                 {
@@ -359,7 +359,7 @@ TEST_CASE("File.", "[file]")
             }
             WHEN("we open it with file_creation_options::create_or_overwrite")
             {
-                auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test6.txt"), vfs::file_creation_options::create_or_overwrite);
+                auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test6.txt"), vfs::file_creation_options::create_or_overwrite);
 
                 THEN("we succeed")
                 {
@@ -368,7 +368,7 @@ TEST_CASE("File.", "[file]")
             }
             WHEN("we open it with file_creation_options::create_if_nonexisting")
             {
-                auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test7.txt"), vfs::file_creation_options::create_if_nonexisting);
+                auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test7.txt"), vfs::file_creation_options::create_if_nonexisting);
 
                 THEN("we succeed")
                 {
@@ -382,7 +382,7 @@ TEST_CASE("File.", "[file]")
     {
         GIVEN("a write only file")
         {
-            auto spFile = vfs::open_write_only(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
+            auto spFile = vfs::open_write_only(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
 
             WHEN("we write into it")
             {
@@ -408,7 +408,7 @@ TEST_CASE("File.", "[file]")
 
         GIVEN("a read only file")
         {
-            auto spFile = vfs::open_read_only(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
+            auto spFile = vfs::open_read_only(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
 
             WHEN("we write into it")
             {
@@ -434,7 +434,7 @@ TEST_CASE("File.", "[file]")
 
         GIVEN("a read write file")
         {
-            auto spFile = vfs::open_read_write(vfs::path(".\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
+            auto spFile = vfs::open_read_write(vfs::path(test_directory + "\\test\\file\\readwrite\\test0.txt"), vfs::file_creation_options::open_if_existing);
 
             WHEN("we write into it")
             {

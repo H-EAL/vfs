@@ -8,6 +8,9 @@
 #include "vfs.hpp"
 #include "vfs/logging.hpp"
 
+// Change test working directory here (without a trailing slash).
+const std::string test_directory = ".";
+
 const std::string text =
 "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
 "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
@@ -34,8 +37,8 @@ const std::string text2 =
 
 TEST_CASE("Clean up.", "[cleanup]")
 {
-    std::filesystem::remove_all(".\\foo");
-    std::filesystem::remove_all(".\\test");
+    std::filesystem::remove_all(test_directory + "\\foo");
+    std::filesystem::remove_all(test_directory + "\\test");
 }
 
 // TODO : Virtual Array, Pipe, Virtual Allocator tests.
