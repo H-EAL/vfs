@@ -11,6 +11,7 @@
 #include <signal.h>
 
 #include "vfs/platform.hpp"
+#include "vfs/path.hpp"
 
 
 namespace vfs {
@@ -100,7 +101,6 @@ namespace vfs {
                     vfs_errorf("inotify_rm_watch() failed with error: %s", get_last_error_as_string(errno).c_str());
                     // Compile and link with -pthread
                     pthread_kill(thread_.native_handle(), SIGINT);
-                    // pthread_cancel(thread_.native_handle());
                 }
                 watchingThread.join();
             });
