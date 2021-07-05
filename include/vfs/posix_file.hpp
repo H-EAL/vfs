@@ -1,7 +1,10 @@
 #pragma once
 
+#include <sys/mman.h>
+#include <stdio.h>
+
 #include "vfs/platform.hpp"
-#include "vfs/file_flags.hpp"
+#include "vfs/posix_file_flags.hpp"
 #include "vfs/path.hpp"
 #include "vfs/posix_move.hpp"
 
@@ -18,30 +21,36 @@ namespace vfs {
         : public posix_move
     {
     protected:
+        //------------------------------------------------------------------------------------------
         using native_handle = int32_t;
 
     protected:
+        //------------------------------------------------------------------------------------------
         native_handle nativeHandle() const
         {
-            return fileHandle_;
+            return fileDescriptor_;
         }
 
+        //------------------------------------------------------------------------------------------
         native_handle nativeFileMappingHandle() const
         {
-            return -1;// fileMappingHandle_;
+            return -1;
         }
 
+        //------------------------------------------------------------------------------------------
         const path& fileName() const
         {
             return fileName_;
         }
 
+        //------------------------------------------------------------------------------------------
         file_access fileAccess() const
         {
             return fileAccess_;
         }
 
     protected:
+        //------------------------------------------------------------------------------------------
         posix_file
         (
             const path              &name,
@@ -51,18 +60,21 @@ namespace vfs {
             file_attributes         attributes
         )
             : fileName_(name)
-            , fileHandle_(-1)
-            //, fileMappingHandle_(nullptr)
+            , fileDescriptor_(-1)
             , fileAccess_(access)
         {
-            const auto _flags =
-                posix_file_access(access)                     | 
-                posix_file_share_mode(file_share_mode::read)  |
-                posix_file_creation_options(creationOption)   |
-                posix_file_flags(flags)                       |
+            // There is no equivalent to OPEN_IF_EXISTING in posix.
+            // Best practice is to check if opening the file with file_creation_options::create_if_nonexisting fails, and then simply open it with file_creation_options::open_or_create.
+            auto useCreationOption = creationOption == file_creation_options::open_if_existing ? file_creation_options::create_if_nonexisting : creationOption;
+          
+            auto _flags =
+                posix_file_access(access)                       | 
+                posix_file_share_mode(file_share_mode::read)    |
+                posix_file_creation_options(useCreationOption)  |
+                posix_file_flags(flags)                         |
                 posix_file_attributes(attributes);
             
-            fileHandle_ = ::open
+            fileDescriptor_ = ::open
             (
                 // File name
                 fileName_.c_str(),
@@ -72,19 +84,42 @@ namespace vfs {
                 S_IRWXU | S_IRWXG | S_IRWXO
             );
 
-            if (fileHandle_  == -1)
+            if (fileDescriptor_ != -1 && creationOption == file_creation_options::open_if_existing)
             {
-                const auto errorCode = errno;
-                vfs_errorf("open(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
+                // Then the file didn't exist previously.
+                close();
+                vfs_errorf("File named %s opened with file_creation_options::open_if_existing didn't already exist.", fileName_.c_str());
+                return;
+            }
+
+            if (fileDescriptor_  == -1)
+            {
+                if (creationOption == file_creation_options::open_if_existing && errno == EEXIST)
+                {
+                    // This is expected behavior.
+                    _flags &= ~posix_file_creation_options(useCreationOption);
+                    _flags |= posix_file_creation_options(file_creation_options::open_or_create);
+
+                    fileDescriptor_ = ::open(fileName_.c_str(), _flags, S_IRWXU | S_IRWXG | S_IRWXO);
+
+                    if (fileDescriptor_ != -1)
+                    {
+                        // Business as usual.
+                        return;
+                    }
+                }
+                vfs_errorf("open(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errno).c_str());
             }
         }
 
+        //------------------------------------------------------------------------------------------
         ~posix_file()
         {
             close();
         }
 
     protected:
+        //------------------------------------------------------------------------------------------
         static bool exists(const path &filePath)
         {
             struct stat st{};
@@ -92,34 +127,47 @@ namespace vfs {
             return (st.st_mode & S_IFMT) == S_IFREG;
         }
         
+        //------------------------------------------------------------------------------------------
         static uint64_t get_last_write_time(const path &filePath)
         {
             ///TODO
             return 0ull;
         }
 
-    protected:
-        bool isValid() const
+        //------------------------------------------------------------------------------------------
+        static void delete_file(const path &filePath)
         {
-            return fileHandle_ >= 0;
-        }
-
-        bool isMapped() const
-        {
-            //return fileMappingHandle_ != nullptr;
-            return false;
-        }
-
-        void close()
-        {
-            closeMapping();
-            if (isValid())
+            if (remove(filePath.c_str()) == -1)
             {
-                ::close(fileHandle_);
-                fileHandle_ = -1;
+                vfs_errorf("remove(%s) failed with error: %s", filePath.c_str(), get_last_error_as_string(errno).c_str());
             }
         }
 
+    protected:
+        //------------------------------------------------------------------------------------------
+        bool isValid() const
+        {
+            return fileDescriptor_ >= 0;
+        }
+
+        //------------------------------------------------------------------------------------------
+        bool isMapped() const
+        {
+            return false;
+        }
+        
+        //------------------------------------------------------------------------------------------
+        void close()
+        {
+            //closeMapping();
+            if (isValid())
+            {
+                ::close(fileDescriptor_);
+                fileDescriptor_ = -1;
+            }
+        }
+
+        //------------------------------------------------------------------------------------------
         int64_t size() const
         {
             vfs_check(isValid());
@@ -128,11 +176,12 @@ namespace vfs {
             return st.st_size;
         }
 
+        //------------------------------------------------------------------------------------------
         bool resize(int64_t newSize)
         {
             vfs_check(isValid());
             
-            const auto result = ftruncate64(fileHandle_, newSize);
+            const auto result = ftruncate64(fileDescriptor_, newSize);
 
             if (result == -1)
             {
@@ -143,11 +192,12 @@ namespace vfs {
             return true;
         }
 
+        //------------------------------------------------------------------------------------------
         bool skip(int64_t offset)
         {
             vfs_check(isValid());
             
-            const auto resultOffset = lseek64(fileHandle_, offset, SEEK_CUR);
+            const auto resultOffset = lseek64(fileDescriptor_, offset, SEEK_CUR);
             
             if (resultOffset == -1)
             {
@@ -158,11 +208,12 @@ namespace vfs {
             return true;
         }
 
+        //------------------------------------------------------------------------------------------
         int64_t read(uint8_t *dst, int64_t sizeInBytes)
         {
             vfs_check(isValid());
 
-            const auto numberOfBytesRead = ::read(fileHandle_, dst, sizeInBytes);
+            const auto numberOfBytesRead = ::read(fileDescriptor_, dst, sizeInBytes);
             
             if (numberOfBytesRead == -1)
             {
@@ -173,11 +224,12 @@ namespace vfs {
             return numberOfBytesRead;
         }
 
+        //------------------------------------------------------------------------------------------
         int64_t write(const uint8_t *src, int64_t sizeInBytes)
         {
             vfs_check(isValid());
 
-            const auto numberOfBytesWritten = ::write(fileHandle_, src, sizeInBytes);
+            const auto numberOfBytesWritten = ::write(fileDescriptor_, src, sizeInBytes);
             
             if (numberOfBytesWritten == -1)
             {
@@ -188,121 +240,38 @@ namespace vfs {
             return numberOfBytesWritten;
         }
 
-        bool createMapping(int64_t viewSize)
+       /* //------------------------------------------------------------------------------------------
+        bool createMapping(int64_t viewSize, int32_t fileMapAccess)
         {
-            /*/
-            const auto protect = DWORD((fileAccess_ == file_access::read_only) ? PAGE_READONLY : PAGE_READWRITE);
-            fileMappingHandle_ = CreateFileMapping
-            (
-                // Handle to the file to map
-                fileHandle_,
-                // Security attributes
-                nullptr,
-                // Page protection level
-                protect,
-                // Mapping size, whole file if 0
-                DWORD(viewSize >> 32), DWORD((viewSize << 32) >> 32),
-                // File mapping object name for system wide objects, unsupported for now
-                nullptr
-            );
+            pMappedFile_ = reinterpret_cast<uint8_t *>(mmap(nullptr, viewSize, fileMapAccess, MAP_SHARED, fileDescriptor_, 0));
 
-            if (fileMappingHandle_ == nullptr)
+            if (pMappedFile_ == MAP_FAILED)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("CreateFileMapping(%ws) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errorCode).c_str());
-                return false;
+                pMappedFile_ = nullptr;
+                vfs_errorf("mmap(nullptr, %d, %d, MAP_SHARED, %d, 0) failed with error: %s", viewSize, fileMapAccess, fileDescriptor_, get_last_error_as_string(errno).c_str());
             }
-            */
-            return true;
-        }
-
-        void closeMapping()
-        {
-            /*
-            if (isMapped())
-            {
-                CloseHandle(fileMappingHandle_);
-                fileMappingHandle_ = nullptr;
-            }
-            */
-        }
-
-    private:
-        path            fileName_;
-        native_handle   fileHandle_;
-        //HANDLE          fileMappingHandle_;
-        file_access     fileAccess_;
-
-    private:
-        static int32_t posix_file_access(file_access access)
-        {
-            switch (access)
-            {
-            case file_access::read_only:    return O_RDONLY;
-            case file_access::write_only:   return O_WRONLY;
-            case file_access::read_write:   return O_RDWR;
-            }
-
-            vfs_check(false);
-            return 0;
-		}
-
-		static int32_t posix_file_share_mode(file_share_mode shareMode)
-		{
-            /*
-			switch (shareMode)
-			{
-			case file_share_mode::exclusive:	return 0;
-			case file_share_mode::can_delete:	return FILE_SHARE_DELETE;
-			case file_share_mode::read:			return FILE_SHARE_READ;
-			case file_share_mode::write:		return FILE_SHARE_WRITE;
-			}
-
-			vfs_check(false);
-            */
-			return 0;
-		}
-
-        static int32_t posix_file_creation_options(file_creation_options creationOption)
-        {
-            switch (creationOption)
-            {
-            case file_creation_options::create_if_nonexisting:  return O_CREAT | O_EXCL;
-            case file_creation_options::create_or_overwrite:    return O_CREAT | O_TRUNC;
-            case file_creation_options::open_if_existing:       return O_APPEND;
-            case file_creation_options::open_or_create:         return O_CREAT | O_APPEND;
-            case file_creation_options::truncate_existing:      return O_TRUNC;
-            }
-
-            vfs_check(false);
-            return 0;
-        }
-
-        static int32_t posix_file_flags(file_flags flags)
-        {
-            auto f = int32_t{ 0 };
-            /*
-            if (uint32_t(flags) & uint32_t(file_flags::delete_on_close))
-                f |= FILE_FLAG_DELETE_ON_CLOSE;
-
-            if (uint32_t(flags) & uint32_t(file_flags::sequential_scan))
-                f |= FILE_FLAG_SEQUENTIAL_SCAN;
-            */
-            return f;
-        }
-
-        static int32_t posix_file_attributes(file_attributes attributes)
-        {
-            auto attr = int32_t{ 0 };
-            /*
-            if (uint32_t(attributes) & uint32_t(file_attributes::normal))
-                attr |= FILE_ATTRIBUTE_NORMAL;
             
-            if (uint32_t(attributes) & uint32_t(file_attributes::temporary))
-                attr |= O_TMPFILE;
-            */
-            return attr;
+            return pMappedFile_ != nullptr;
         }
+
+        //------------------------------------------------------------------------------------------
+        void closeMapping(int32_t viewSize)
+        {
+            const auto error = munmap(pMappedFile_, viewSize);
+            if (error == -1)
+            {
+                vfs_errorf("munmap(%d, %d) failed with error: %s", pMappedFile_, viewSize, get_last_error_as_string(errno).c_str());
+            }
+
+            pMappedFile_ = nullptr;
+        }*/
+
+    private:
+       //------------------------------------------------------------------------------------------
+        path            fileName_;
+        native_handle   fileDescriptor_;
+        uint8_t         *pMappedFile_;
+        file_access     fileAccess_;
     };
     //----------------------------------------------------------------------------------------------
 

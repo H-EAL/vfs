@@ -2,7 +2,13 @@
 
 #include <atomic>
 #include <thread>
+#include <filesystem>
+#include <condition_variable>
+#include <mutex>
 #include <functional>
+#include <sys/inotify.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "vfs/platform.hpp"
 
@@ -19,87 +25,98 @@ namespace vfs {
         using callback_t = std::function<void(const path&)>;
 
     public:
+        //------------------------------------------------------------------------------------------
         posix_watcher(const path &dir, const callback_t &callback)
             : running_(false)
-            /*, dir_(dir)
-            , handle_(INVALID_HANDLE_VALUE)
+            , dir_(dir)
             , callback_(callback)
-            , eventHandle_(nullptr)*/
+            , notifyInstance_(-1)
         {}
 
+        //------------------------------------------------------------------------------------------
         posix_watcher(posix_watcher &&other)
             : running_(other.running_.load())
-            /*, dir_(std::move(other.dir_))
-            , handle_(other.handle_)
+            , dir_(std::move(other.dir_))
             , callback_(std::move(other.callback_))
             , thread_(std::move(other.thread_))
-            , eventHandle_(other.eventHandle_)*/
+            , notifyInstance_(other.notifyInstance_)
         {
-            //other.handle_       = INVALID_HANDLE_VALUE;
-            //other.eventHandle_  = nullptr;
+            // ISSUE:
+            // No move constructor for std::mutex or std::condition_variable.
         }
 
+    public:
+        //------------------------------------------------------------------------------------------
         posix_watcher(const posix_watcher &)                = delete;
         posix_watcher& operator =(const posix_watcher &)    = delete;
 
+    public:
+        //------------------------------------------------------------------------------------------
         bool startWatching(bool folders, bool files)
         {
-            /*
             if (callback_ == nullptr)
             {
-                vfs_errorf("NULL callback specified to watcher %ws", dir_.c_str());
+                vfs_errorf("NULL callback specified to watcher %s", dir_.c_str());
                 return false;
             }
+            
+            notifyInstance_ = inotify_init();
 
-            const auto bManualReset  = FALSE;
-            const auto bInitialState = FALSE;
-            eventHandle_ = CreateEvent(nullptr, bManualReset, bInitialState, nullptr);
-            if (eventHandle_ == nullptr)
+            if (notifyInstance_ == -1)
             {
-                vfs_errorf("Could not create event for watcher %ws", dir_.c_str());
+                vfs_errorf("ionotify_init() failed with error: %s", get_last_error_as_string(errno).c_str());
                 return false;
             }
 
-            // Watch the directory for file creation and deletion.
-            auto flags = DWORD{ 0 };
-            flags |= folders ? FILE_NOTIFY_CHANGE_DIR_NAME : 0;
-            flags |= files ? FILE_NOTIFY_CHANGE_FILE_NAME : 0;
+            auto mask = IN_CREATE | IN_DELETE | IN_MOVED_TO;
+            
+            const auto watchDescriptor = inotify_add_watch(notifyInstance_, dir_.str().c_str(), mask);
 
-            handle_ = FindFirstChangeNotification(dir_.c_str(), FALSE, flags);
-
-            if (handle_ == INVALID_HANDLE_VALUE)
+            if (watchDescriptor == -1)
             {
-                const auto errorCode = GetLastError();
-                vfs_errorf("FindFirstChangeNotification function failed with error %s with specified path %ws", get_last_error_as_string(errorCode).c_str(), dir_.c_str());
+                vfs_errorf("inotify_add_watch() failed with error: %s", get_last_error_as_string(errno).c_str());
                 return false;
             }
+
 
             running_ = true;
+
             thread_ = std::thread(
-                [this]
+            [this, folders, files, watchDescriptor]
             {
-                run();
+                // make another thread
+                auto watchingThread = std::thread([this, folders, files]
+                {
+                     run(folders, files);
+                });
+                    
+                std::unique_lock<std::mutex> lk(eventMutex_);
+                event_.wait(lk);
+                // Removing a watch causes an IN_IGNORED event to be generated for this watchDescriptor.
+                const auto error = inotify_rm_watch(notifyInstance_, watchDescriptor);
+
+                if (error == -1)
+                {
+                    vfs_errorf("inotify_rm_watch() failed with error: %s", get_last_error_as_string(errno).c_str());
+                    // Compile and link with -pthread
+                    pthread_kill(thread_.native_handle(), SIGINT);
+                    // pthread_cancel(thread_.native_handle());
+                }
+                watchingThread.join();
             });
-            */
+
             return true;
         }
 
+        //------------------------------------------------------------------------------------------
         bool stopWatching()
         {
-            /*
             running_ = false;
-            const auto success = SetEvent(eventHandle_);
-            if (success == FALSE)
-            {
-                vfs_errorf("Could not signal the event to wake up watcher %ws", dir_.c_str());
-                return false;
-            }
-            CloseHandle(eventHandle_);
-            eventHandle_ = nullptr;
-            */
+            event_.notify_one();
             return true;
         }
 
+        //------------------------------------------------------------------------------------------
         void wait()
         {
             if (thread_.joinable())
@@ -109,48 +126,60 @@ namespace vfs {
         }
 
     private:
-        void run()
+        //------------------------------------------------------------------------------------------
+        void run(bool folders, bool files)
         {
-            /*
+            // Properly close when stop signal is triggered.
+            /*signal(SIGINT, [this](int)
+            {
+                vfs_check(running_ == false);
+            });*/
+            
             // Call the callback in case we have some folders in there waiting before we started the process
             callback_(dir_);
 
             while (running_)
             {
-                HANDLE handles[] = { eventHandle_, handle_ };
-                const auto dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+                struct inotify_event ev;
 
-                if (dwWaitStatus == WAIT_OBJECT_0)
+                // Will block until a new event takes place.
+                const auto size = read(notifyInstance_, &ev, sizeof(inotify_event));
+
+                if ((ev.mask & IN_IGNORED) != 0)
                 {
+                    // Caller thread wants to end program.
                     vfs_check(running_ == false);
                     return;
                 }
-
-                if (dwWaitStatus != (WAIT_OBJECT_0+1) )
+                else if (strlen(ev.name) == 0)
                 {
-                    vfs_check("Unhandled dwWaitStatus {0:x}");
-                    return;
+                    // WARNING: I'm not sure if ev.name is initialized with an empty string.
+                    // Then a folder has been created or deleted.
+                    if (folders)
+                    {
+                        callback_(dir_);
+                    }
                 }
-
-                // Call callback
-                callback_(dir_);
-
-                if (FindNextChangeNotification(handle_) == FALSE)
+                else
                 {
-                    vfs_errorf("FindNextChangeNotification function failed with error code %d", GetLastError());
-                    return;
+                    // Then a file has been created or deleted
+                    if (files)
+                    {
+                        callback_(dir_);
+                    }
                 }
             }
-            */
         }
 
     private:
-        std::atomic<bool>   running_;
-        path                dir_;
-        //HANDLE              handle_;
-        callback_t          callback_;
-        std::thread         thread_;
-        //HANDLE              eventHandle_;
+        //------------------------------------------------------------------------------------------
+        std::atomic<bool>           running_;
+        path                        dir_;
+        int32_t                     notifyInstance_;
+        callback_t                  callback_;
+        std::thread                 thread_;
+        std::condition_variable     event_;
+        std::mutex                  eventMutex_;
     };
 
 } /*vfs*/
