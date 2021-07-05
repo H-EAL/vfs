@@ -63,15 +63,27 @@ namespace vfs {
             , fileDescriptor_(-1)
             , fileAccess_(access)
         {
-            // There is no equivalent to OPEN_IF_EXISTING in posix.
-            // Best practice is to check if opening the file with file_creation_options::create_if_nonexisting fails, and then simply open it with file_creation_options::open_or_create.
-            auto useCreationOption = creationOption == file_creation_options::open_if_existing ? file_creation_options::create_if_nonexisting : creationOption;
-          
-            auto _flags =
-                posix_file_access(access)                       | 
-                posix_file_share_mode(file_share_mode::read)    |
-                posix_file_creation_options(useCreationOption)  |
-                posix_file_flags(flags)                         |
+            auto _creationOption = creationOption;
+            
+            // There is no equivalent to OPEN_IF_EXISTING in posix. If file doesn't exist we don't open it, if it does we open it with file_creation_options::open_or_create.
+            if (creationOption == file_creation_options::open_if_existing)
+            {
+                if (!exists(name))
+                {
+                    vfs_errorf("File named %s opened with file_creation_options::open_if_existing doesn't exist.", fileName_.c_str());
+                    return;
+                }
+                else
+                {
+                    _creationOption = file_creation_options::open_or_create;
+                }
+            }
+           
+            const auto _flags =
+                posix_file_access(access)                           | 
+                posix_file_share_mode(file_share_mode::read)        |
+                posix_file_creation_options(_creationOption)        |
+                posix_file_flags(flags)                             |
                 posix_file_attributes(attributes);
             
             fileDescriptor_ = ::open
@@ -84,30 +96,8 @@ namespace vfs {
                 S_IRWXU | S_IRWXG | S_IRWXO
             );
 
-            if (fileDescriptor_ != -1 && creationOption == file_creation_options::open_if_existing)
-            {
-                // Then the file didn't exist previously.
-                close();
-                vfs_errorf("File named %s opened with file_creation_options::open_if_existing didn't already exist.", fileName_.c_str());
-                return;
-            }
-
             if (fileDescriptor_  == -1)
             {
-                if (creationOption == file_creation_options::open_if_existing && errno == EEXIST)
-                {
-                    // This is expected behavior.
-                    _flags &= ~posix_file_creation_options(useCreationOption);
-                    _flags |= posix_file_creation_options(file_creation_options::open_or_create);
-
-                    fileDescriptor_ = ::open(fileName_.c_str(), _flags, S_IRWXU | S_IRWXG | S_IRWXO);
-
-                    if (fileDescriptor_ != -1)
-                    {
-                        // Business as usual.
-                        return;
-                    }
-                }
                 vfs_errorf("open(%s) failed with error: %s", fileName_.c_str(), get_last_error_as_string(errno).c_str());
             }
         }
@@ -147,7 +137,7 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         bool isValid() const
         {
-            return fileDescriptor_ >= 0;
+            return fileDescriptor_ != -1;
         }
 
         //------------------------------------------------------------------------------------------
@@ -159,7 +149,6 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void close()
         {
-            //closeMapping();
             if (isValid())
             {
                 ::close(fileDescriptor_);
@@ -239,32 +228,6 @@ namespace vfs {
             
             return numberOfBytesWritten;
         }
-
-       /* //------------------------------------------------------------------------------------------
-        bool createMapping(int64_t viewSize, int32_t fileMapAccess)
-        {
-            pMappedFile_ = reinterpret_cast<uint8_t *>(mmap(nullptr, viewSize, fileMapAccess, MAP_SHARED, fileDescriptor_, 0));
-
-            if (pMappedFile_ == MAP_FAILED)
-            {
-                pMappedFile_ = nullptr;
-                vfs_errorf("mmap(nullptr, %d, %d, MAP_SHARED, %d, 0) failed with error: %s", viewSize, fileMapAccess, fileDescriptor_, get_last_error_as_string(errno).c_str());
-            }
-            
-            return pMappedFile_ != nullptr;
-        }
-
-        //------------------------------------------------------------------------------------------
-        void closeMapping(int32_t viewSize)
-        {
-            const auto error = munmap(pMappedFile_, viewSize);
-            if (error == -1)
-            {
-                vfs_errorf("munmap(%d, %d) failed with error: %s", pMappedFile_, viewSize, get_last_error_as_string(errno).c_str());
-            }
-
-            pMappedFile_ = nullptr;
-        }*/
 
     private:
        //------------------------------------------------------------------------------------------
