@@ -70,7 +70,7 @@ namespace vfs {
             if (!sharedMemory_)
             {
                 // Create a memory mapping of a file (in the file system) in the calling process' virtual address space.
-                // Multiple processe can share a view of this same file by calling mmap() with the same file descriptor.
+                // Multiple processes can share a view of this same file by calling mmap() with the same file descriptor.
                 fileTotalSize_              = calculateCurrentFileSize();
                 mappedTotalSize_            = viewSize == 0 ? fileTotalSize_ : viewSize;
                 if (fileTotalSize_ < mappedTotalSize_)
@@ -84,7 +84,7 @@ namespace vfs {
             {
                 // Create or open a shared memory object and map the shared memory object into the virtual address space of the calling process.
                 // Shared memory objects are created in a virtual filesystem, normally mounted under /dev/shm. Data will not persist after process ends.
-                // Multiple processe can share a view of this same memory by calling shm_open with the same name.
+                // Multiple processes can share a view of this same memory by calling shm_open with the same name.
 
                 //https://stackoverflow.com/questions/24875257/why-use-shm-open
                 //https://stackoverflow.com/questions/25170795/mmap-file-between-unrelated-processes
@@ -94,7 +94,11 @@ namespace vfs {
                 auto flags                      = sharedMemoryAccess | O_CREAT | O_EXCL;
                 const auto mode                 = S_IRUSR | S_IWUSR;
 
-                vfs_check(isNameValid(name_));
+                if(!isNameValid(name_))
+                {
+                    vfs_errorf("The name %s provided is not valid for posix shared memory. Mapping failed.", name_.c_str());
+                    return false;
+                }
 
                 // name_ will specify the name of the shared-memory object.
                 // Processes that wish to access this shared memory must refer to the object by this name.
@@ -109,9 +113,7 @@ namespace vfs {
                     {
                         // Then the memory opened didn't exist previously.
                         close(fileDescriptor_);
-                        shm_unlink(name_.c_str());
                         return false;
-
                     }
                     else if (errno != EEXIST)
                     {
@@ -121,7 +123,7 @@ namespace vfs {
                     else
                     {
                         // Intended behavior.
-                        flags           |= ~O_EXCL;
+                        flags           &= ~O_EXCL;
                         fileDescriptor_ = shm_open(name_.c_str(), flags, mode);
 
                         if (fileDescriptor_ == -1)
@@ -146,7 +148,10 @@ namespace vfs {
             {
                 if (ftruncate(fileDescriptor_, fileTotalSize_) == -1)
                 {
-                    if (sharedMemory_) close(fileDescriptor_);
+                    if (sharedMemory_)
+                    {
+                        close(fileDescriptor_);
+                    }
                     vfs_errorf("ftruncate() failed with error %s", get_last_error_as_string(errno).c_str());
                     return false;
                 }
