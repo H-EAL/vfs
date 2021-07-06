@@ -11,7 +11,7 @@ TEST_CASE("File.", "[file]")
             {
                 // Read only 
                 {
-                    std::ofstream outfile(test_directory + "\\test\\file\\readonly\\test0.txt");
+                    std::ofstream outfile(test_directory + "/test/file/readonly/test0.txt");
                     outfile.close();
                 }
 
@@ -113,7 +113,7 @@ TEST_CASE("File.", "[file]")
             {
                 // Write only 
                 {
-                    std::ofstream outfile(test_directory + "\\test\\file\\writeonly\\test0.txt");
+                    std::ofstream outfile(test_directory + "/test/file/writeonly/test0.txt");
                     outfile.close();
                 }
 
@@ -215,7 +215,7 @@ TEST_CASE("File.", "[file]")
             {
                 // Read write 
                 {
-                    std::ofstream outfile(test_directory + "\\test\\file\\readwrite\\test0.txt");
+                    std::ofstream outfile(test_directory + "/test/file/readwrite/test0.txt");
                     outfile.close();
                 }
 
