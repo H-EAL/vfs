@@ -60,7 +60,12 @@
         {
             constexpr auto MESSAGE_LENGTH = 1024;
             message.resize(MESSAGE_LENGTH);
-            strerror_r(errorCode, &message[0], MESSAGE_LENGTH);
+
+            // XSI-compliant strerror_r() does not work with clang and g++/
+            // We must use the GNU-specific strerror_r() which returns a char* rather than int.
+            // GNU-specific strerror_r() will either fill the buffer we provide and return a pointer to a string that the function stores in the buffer, or return a pointer to some immutable static string.
+            char *staticErrorMessage = strerror_r(errorCode, &message[0], MESSAGE_LENGTH);
+            strncpy(&message[0], staticErrorMessage, MESSAGE_LENGTH);
         }
         
         return message;
