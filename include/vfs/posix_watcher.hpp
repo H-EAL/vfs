@@ -34,18 +34,6 @@ namespace vfs {
             , notifyInstance_(-1)
         {}
 
-        //------------------------------------------------------------------------------------------
-        posix_watcher(posix_watcher &&other)
-            : running_(other.running_.load())
-            , dir_(std::move(other.dir_))
-            , callback_(std::move(other.callback_))
-            , thread_(std::move(other.thread_))
-            , notifyInstance_(other.notifyInstance_)
-        {
-            // ISSUE:
-            // No move constructor for std::mutex or std::condition_variable.
-        }
-
     public:
         //------------------------------------------------------------------------------------------
         posix_watcher(const posix_watcher &)                = delete;
