@@ -168,8 +168,7 @@ namespace vfs {
             virtual_allocator::deallocate(pArray_);
             virtual_allocator::deallocate(pControlRegister_);
 
-            pArray_             = nullptr;
-            pControlRegister_   = nullptr;
+            reset();
         }
 
         //------------------------------------------------------------------------------------------
