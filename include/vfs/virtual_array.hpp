@@ -53,6 +53,11 @@ namespace vfs {
                 return !(*this == rhs);
             }
 
+            T &operator *()
+            {
+                return arr_[currentIndex_];
+            }
+
         private:
             void goToNextValidIndex()
             {
