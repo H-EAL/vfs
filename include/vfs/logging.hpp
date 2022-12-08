@@ -67,7 +67,10 @@
             char *staticErrorMessage = strerror_r(errorCode, &message[0], MESSAGE_LENGTH);
             strncpy(&message[0], staticErrorMessage, MESSAGE_LENGTH);
 
-            messages.resize(message.find('\0'));
+            if (const auto messageSize = message.find('\0'); messageSize != std::string::npos)
+            {
+                message.resize(messageSize);
+            }
         }
         
         return message;
