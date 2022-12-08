@@ -66,6 +66,8 @@
             // GNU-specific strerror_r() will either fill the buffer we provide and return a pointer to a string that the function stores in the buffer, or return a pointer to some immutable static string.
             char *staticErrorMessage = strerror_r(errorCode, &message[0], MESSAGE_LENGTH);
             strncpy(&message[0], staticErrorMessage, MESSAGE_LENGTH);
+
+            messages.resize(message.find('\0'));
         }
         
         return message;
