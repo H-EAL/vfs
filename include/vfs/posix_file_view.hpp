@@ -180,7 +180,8 @@ namespace vfs {
         {
             vfs_check(fileDescriptor_ != -1);
             struct stat st;
-            vfs_check(fstat(fileDescriptor_, &st) != -1);
+            const auto result = fstat(fileDescriptor_, &st);
+            vfs_check(result != -1);
             return st.st_size;
         }
 
