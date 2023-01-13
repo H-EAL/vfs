@@ -11,7 +11,8 @@ TEST_CASE("Fileview.", "[fileview]")
             {
                 // Read only 
                 {
-                    auto spFile = open_read_write(test_directory + "\\test\\fileview\\readonly\\test0.txt", vfs::file_creation_options::create_or_overwrite);
+                    auto spFile = open_read_write(test_directory + "\\test\\fileview\\readonly\\test0.txt",
+                                                  vfs::file_creation_options::create_or_overwrite);
                     spFile->resize(64 * 1024);
 
                     REQUIRE(vfs::file::exists(test_directory + "\\test\\fileview\\readonly\\test0.txt"));
@@ -19,7 +20,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::open_if_existing")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"),
+                            vfs::file_creation_options::open_if_existing);
                     THEN("we should succeed")
                     {
                         REQUIRE(spFileView != nullptr);
@@ -29,7 +32,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::create_or_overwrite")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"),
+                            vfs::file_creation_options::create_or_overwrite);
                     THEN("we should fail")
                     {
                         // This is expected behaviour. It does not make sense to open a read only view on a newly created file, or an overwritten file (which has also just been created). 
@@ -40,7 +45,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::open_or_create")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"),
+                            vfs::file_creation_options::open_or_create);
                     THEN("we should succeed")
                     {
                         REQUIRE(spFileView != nullptr);
@@ -50,7 +57,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::create_if_nonexisting")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test0.txt"),
+                            vfs::file_creation_options::create_if_nonexisting);
                     THEN("we should fail")
                     {
                         // WE fail because we are trying to create a file that already exists.
@@ -64,7 +73,9 @@ TEST_CASE("Fileview.", "[fileview]")
             {
                 WHEN("we open a read_only_view with vfs::file::open_if_existing")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test1.txt"), vfs::file_creation_options::open_if_existing);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test1.txt"),
+                            vfs::file_creation_options::open_if_existing);
                     THEN("we should fail")
                     {
                         REQUIRE(spFileView == nullptr);
@@ -74,7 +85,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::create_or_overwrite")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test1.txt"), vfs::file_creation_options::create_or_overwrite);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test1.txt"),
+                            vfs::file_creation_options::create_or_overwrite);
                     THEN("we should fail")
                     {
                         // The creation of the file should succeed but the fileview will not be valid, since the file is empty and in read only.
@@ -86,7 +99,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::open_or_create")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test2.txt"), vfs::file_creation_options::open_or_create);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test2.txt"),
+                            vfs::file_creation_options::open_or_create);
                     THEN("we should fail")
                     {
                         // The creation of the file should succeed but the fileview will not be valid, since the file is empty and in read only.
@@ -98,7 +113,9 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_only_view with vfs::file::create_if_nonexisting")
                 {
-                    auto spFileView = vfs::open_read_only_view(vfs::path(test_directory + "\\test\\fileview\\readonly\\test3.txt"), vfs::file_creation_options::create_if_nonexisting);
+                    auto spFileView = vfs::open_read_only_view(
+                            vfs::path(test_directory + "\\test\\fileview\\readonly\\test3.txt"),
+                            vfs::file_creation_options::create_if_nonexisting);
                     THEN("we should fail")
                     {
                         // The creation of the file should succeed but the fileview will not be valid, since the file is empty and in read only.
