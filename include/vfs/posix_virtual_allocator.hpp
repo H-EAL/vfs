@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/mman.h>
+
 
 namespace vfs {
 
@@ -20,7 +22,7 @@ namespace vfs {
             return mprotect(pAddr, size, PROT_READ | PROT_WRITE) == 0 ? pAddr : nullptr;
         }
         //------------------------------------------------------------------------------------------
-        bool deallocate(void *pAddr)
+        static bool deallocate(void *pAddr)
         {
             return munmap(pAddr, 0);
         }
