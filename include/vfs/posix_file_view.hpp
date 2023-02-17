@@ -25,7 +25,8 @@ namespace vfs {
 	protected:
 		//------------------------------------------------------------------------------------------
         posix_file_view(file_sptr spFile, int64_t viewSize)
-            : sharedMemory_(false)
+            : spFile_(spFile)
+            , sharedMemory_(false)
             , name_(spFile->fileName())
             , fileDescriptor_(spFile->nativeHandle())
             , pData_(nullptr)
@@ -39,7 +40,8 @@ namespace vfs {
 
         //------------------------------------------------------------------------------------------
         posix_file_view(const path &name, int64_t size, bool openExisting)
-            : sharedMemory_(true)
+            : spFile_(nullptr)
+            , sharedMemory_(true)
             , name_(name)
             , fileDescriptor_(-1)
             , pData_(nullptr)
@@ -301,8 +303,15 @@ namespace vfs {
             return false;
         }
 
+        //------------------------------------------------------------------------------------------
+        auto getFile() const
+        {
+            return spFile_;
+        }
+
 	private:
 		//------------------------------------------------------------------------------------------
+        file_sptr   spFile_;
         bool        sharedMemory_;
         path        name_;
         uint32_t    fileDescriptor_;

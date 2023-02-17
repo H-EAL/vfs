@@ -27,11 +27,24 @@ namespace vfs {
 
     public:
         //------------------------------------------------------------------------------------------
+        template<typename R, typename P>
+        posix_watcher(const path &dir, std::chrono::duration<R, P> waitTimeout, const callback_t &callback)
+            : running_(false)
+            , dir_(dir)
+            , callback_(callback)
+            , inotifyFd_(-1)
+            , waitTimeoutInMs_(std::chrono::duration_cast<std::chrono::milliseconds>(waitTimeout).count())
+        {
+            waitTimeoutInMs_ = (waitTimeoutInMs_ == 0) ? std::numeric_limits<uint64_t>::max() : waitTimeoutInMs_;
+        }
+
+        //------------------------------------------------------------------------------------------
         posix_watcher(const path &dir, const callback_t &callback)
             : running_(false)
             , dir_(dir)
             , callback_(callback)
-            , notifyInstance_(-1)
+            , inotifyFd_(-1)
+            , waitTimeoutInMs_(std::numeric_limits<uint64_t>::max())
         {}
 
     public:
@@ -48,47 +61,51 @@ namespace vfs {
                 vfs_errorf("NULL callback specified to watcher %s", dir_.c_str());
                 return false;
             }
-            
-            notifyInstance_ = inotify_init();
 
-            if (notifyInstance_ == -1)
+            inotifyFd_ = inotify_init();
+
+            if (inotifyFd_ == -1)
             {
                 vfs_errorf("ionotify_init() failed with error: %s", get_last_error_as_string(errno).c_str());
                 return false;
             }
 
             auto mask = IN_CREATE | IN_DELETE | IN_MOVED_TO;
-            
-            const auto watchDescriptor = inotify_add_watch(notifyInstance_, dir_.str().c_str(), mask);
 
+            const auto watchDescriptor = inotify_add_watch(inotifyFd_, dir_.c_str(), mask);
             if (watchDescriptor == -1)
             {
                 vfs_errorf("inotify_add_watch() failed with error: %s", get_last_error_as_string(errno).c_str());
                 return false;
             }
 
-
             running_ = true;
 
             thread_ = std::thread(
             [this, folders, files, watchDescriptor]
             {
-                // make another thread
+                // Make another thread
                 auto watchingThread = std::thread([this, folders, files]
                 {
-                     run(folders, files);
+                    run(folders, files);
                 });
-                    
-                std::unique_lock<std::mutex> lk(eventMutex_);
-                event_.wait(lk);
-                // Removing a watch causes an IN_IGNORED event to be generated for this watchDescriptor.
-                const auto error = inotify_rm_watch(notifyInstance_, watchDescriptor);
 
+                std::unique_lock<std::mutex> lk(cvMutex_);
+                if(waitTimeoutInMs_ == std::numeric_limits<uint64_t>::max())
+                {
+                    cv_.wait(lk);
+                }
+                else
+                {
+                    cv_.wait_for(lk, std::chrono::milliseconds(waitTimeoutInMs_));
+                }
+
+                // Removing a watch causes an IN_IGNORED event to be generated for this watchDescriptor.
+                const auto error = inotify_rm_watch(inotifyFd_, watchDescriptor);
                 if (error == -1)
                 {
                     vfs_errorf("inotify_rm_watch() failed with error: %s", get_last_error_as_string(errno).c_str());
-                    // Compile and link with -pthread
-                    pthread_kill(thread_.native_handle(), SIGINT);
+                    pthread_kill(thread_.native_handle(), SIGUSR1);
                 }
                 watchingThread.join();
             });
@@ -100,8 +117,14 @@ namespace vfs {
         bool stopWatching()
         {
             running_ = false;
-            event_.notify_one();
+            wakeUp();
             return true;
+        }
+
+        //------------------------------------------------------------------------------------------
+        void wakeUp()
+        {
+            cv_.notify_one();
         }
 
         //------------------------------------------------------------------------------------------
@@ -117,44 +140,63 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void run(bool folders, bool files)
         {
-            // Properly close when stop signal is triggered.
-            /*signal(SIGINT, [this](int)
-            {
-                vfs_check(running_ == false);
-            });*/
-            
+            // This is set up to end the thread if killed by SIGUSR1.
+            struct sigaction sa;
+            sa.sa_handler   = nullptr;
+            sa.sa_sigaction = nullptr;
+            sigemptyset(&sa.sa_mask);
+            sigaction(SIGUSR1, &sa, nullptr);
+
             // Call the callback in case we have some folders in there waiting before we started the process
             callback_(dir_);
 
+            constexpr auto maxNumEventsToRead   = 128;
+            constexpr auto eventSize            = sizeof(struct inotify_event);
+            constexpr auto bufferLength         = maxNumEventsToRead*(eventSize+16);
+            auto eventBuffer                    = std::vector<uint8_t>(bufferLength);
+
             while (running_)
             {
-                struct inotify_event ev;
+                // Multiple events can be read at a time.
+                auto eventBufferOffset = 0;
 
                 // Will block until a new event takes place.
-                const auto size = read(notifyInstance_, &ev, sizeof(inotify_event));
-
-                if ((ev.mask & IN_IGNORED) != 0)
+                const auto sizeReadInBytes = read(inotifyFd_, eventBuffer.data(), bufferLength);
+                if(sizeReadInBytes == -1)
                 {
-                    // Caller thread wants to end program.
-                    vfs_check(running_ == false);
+                    vfs_errorf("read() of inotify file descriptor failed with error: %s",
+                               get_last_error_as_string(errno).c_str());
                     return;
                 }
-                else if (strlen(ev.name) == 0)
+
+                while (eventBufferOffset < sizeReadInBytes)
                 {
-                    // WARNING: I'm not sure if ev.name is initialized with an empty string.
-                    // Then a folder has been created or deleted.
-                    if (folders)
+                    const auto pEvent = reinterpret_cast<struct inotify_event *>(&eventBuffer[eventBufferOffset]);
+
+                    if ((pEvent->mask & IN_IGNORED) != 0)
                     {
-                        callback_(dir_);
+                        // IN_IGNORED is set when the caller thread removes watch.
+                        vfs_check(running_ == false);
+                        return;
                     }
-                }
-                else
-                {
-                    // Then a file has been created or deleted
-                    if (files)
+                    else if((pEvent->mask & IN_ISDIR) != 0)
                     {
-                        callback_(dir_);
+                        if (folders)
+                        {
+                            // A directory has been created/deleted.
+                            callback_(dir_);
+                        }
                     }
+                    else if (pEvent->len != 0)
+                    {
+                        if (files)
+                        {
+                            // A file has been created/deleted.
+                            callback_(dir_);
+                        }
+                    }
+
+                    eventBufferOffset += eventSize + pEvent->len;
                 }
             }
         }
@@ -163,11 +205,12 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         std::atomic<bool>           running_;
         path                        dir_;
-        int32_t                     notifyInstance_;
+        int32_t                     inotifyFd_;
         callback_t                  callback_;
         std::thread                 thread_;
-        std::condition_variable     event_;
-        std::mutex                  eventMutex_;
+        std::condition_variable     cv_;
+        std::mutex                  cvMutex_;
+        uint64_t                    waitTimeoutInMs_;
     };
 
 } /*vfs*/
