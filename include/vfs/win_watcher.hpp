@@ -147,54 +147,49 @@ namespace vfs {
             // Call the callback in case we have some folders in there waiting before we started the process
             callback_(dir_);
 
-            while (running_)
+            auto isWatching = true;
+
+            while (running_ && isWatching)
             {
                 HANDLE handles[] = { eventHandle_, changeHandle_ };
                 const auto dwWaitStatus = WaitForMultipleObjects(2, handles, FALSE, waitTimeoutInMs_);
 
-                switch (dwWaitStatus)
+                const auto handledStatus = dwWaitStatus == WAIT_OBJECT_0 || dwWaitStatus == WAIT_OBJECT_0 + 1 || dwWaitStatus == WAIT_TIMEOUT;
+                if (!handledStatus)
                 {
-                case WAIT_OBJECT_0:
-                    if (running_ == false)
-                    {
-                        return;
-                    }
-                case WAIT_OBJECT_0 + 1:
-                case WAIT_TIMEOUT:
-                    break;
-
-                default:
                     vfs_errorf("Unhandled dwWaitStatus %x.", dwWaitStatus);
                     return;
                 }
-
-                // Call callback
-                callback_(dir_);
-
-                static constexpr auto max_attempts = 5;
-                auto attempts = max_attempts;
-                while (FindNextChangeNotification(changeHandle_) == FALSE)
+                
+                const auto watcherStopped = dwWaitStatus == WAIT_OBJECT_0 && running_ == false;
+                if (watcherStopped)
                 {
-                    const auto errorCode = GetLastError();
-                    vfs_warningf("FindNextChangeNotification function failed with error code %s.", get_last_error_as_string(errorCode).c_str());
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-
-                    FindCloseChangeNotification(changeHandle_);
-
-                    if (!setupHandle())
-                    {
-                        return;
-                    }
-
-                    if (--attempts == 0)
-                    {
-                        vfs_errorf("FindNextChangeNotification kept failing afer %d attempts.", max_attempts);
-                        return;
-                    }
+                    return;
                 }
+
+                isWatching = subscribeToNextFilesystemChangeEvent();
+                callback_(dir_);
             }
 
             FindCloseChangeNotification(changeHandle_);
+        }
+
+        //------------------------------------------------------------------------------------------
+        bool subscribeToNextFilesystemChangeEvent()
+        {
+            if (FindNextChangeNotification(changeHandle_) == FALSE)
+            {
+                const auto errorCode = GetLastError();
+                vfs_warningf("FindNextChangeNotification function failed with error code %s.", get_last_error_as_string(errorCode).c_str());
+                // TODO@nat/houssem Find out if necessary to sleep here.
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+
+                FindCloseChangeNotification(changeHandle_);
+
+                return setupHandle();
+            }
+
+            return true;
         }
 
     private:
