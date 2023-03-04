@@ -29,10 +29,10 @@ namespace vfs {
         static bool create_directory(const path &dirPath)
         {
             const auto errorCode = mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            
-            if (errorCode != 0)
+            if (errorCode == -1)
             {
-                vfs_errorf("mkdir(%s) returned error code: %d", dirPath.c_str(), errorCode);
+                vfs_errorf("mkdir(%s) returned error code: %s", dirPath.c_str(),
+                           get_last_error_as_string(errno).c_str());
                 return false;
             }
 
@@ -42,11 +42,10 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         static bool delete_directory(const path &dirPath)
         {
-            const auto errorCode = rmdir(dirPath.c_str());
-
-            if (errorCode != 0)
+            if (rmdir(dirPath.c_str()) == -1)
             {
-                vfs_errorf("rmdir(%s) returned error code: %d", dirPath.c_str(), errorCode);
+                vfs_errorf("rmdir(%s) returned error code: %s", dirPath.c_str(),
+                           get_last_error_as_string(errno).c_str());
                 return false;
             }
 
