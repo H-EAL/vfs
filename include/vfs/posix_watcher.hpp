@@ -97,7 +97,18 @@ namespace vfs {
                 }
                 else
                 {
-                    cv_.wait_for(lk, std::chrono::milliseconds(waitTimeoutInMs_));
+                    while(running_)
+                    {
+                        const auto status = cv_.wait_for(lk, std::chrono::milliseconds(waitTimeoutInMs_));
+
+                        const auto watcherStopped = status == std::cv_status::no_timeout && running_ == false;
+                        if(watcherStopped)
+                        {
+                            break;
+                        }
+
+                        callback_(dir_);
+                    }
                 }
 
                 // Removing a watch causes an IN_IGNORED event to be generated for this watchDescriptor.
@@ -176,8 +187,12 @@ namespace vfs {
                     if ((pEvent->mask & IN_IGNORED) != 0)
                     {
                         // IN_IGNORED is set when the caller thread removes watch.
-                        vfs_check(running_ == false);
-                        return;
+                        // This can also happen when the watched file/directory was deleted
+                        // or the filesystem was unmounted.
+                        if(running_ == false)
+                        {
+                            return;
+                        }
                     }
                     else if((pEvent->mask & IN_ISDIR) != 0)
                     {
