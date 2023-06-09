@@ -6,15 +6,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
 
-add_executable(vfs_tests
-        tests/catch_amalgamated.cpp
-        tests/vfs_tests.cpp
-)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "..." FORCE)
+endif()
 
-target_include_directories(vfs_tests PRIVATE
-        include
-        include/vfs
-)
+##############################vfs_tests##############################
+add_executable(vfs_tests tests/vfs_tests.cpp tests/catch_amalgamated.cpp)
 
-# Link with lrt and pthread
-set(CMAKE_EXE_LINKER_FLAGS "-lrt -pthread")
+target_include_directories(vfs_tests PRIVATE include include/vfs)
+
+install(TARGETS vfs_tests DESTINATION bin)
