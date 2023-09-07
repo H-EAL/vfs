@@ -24,6 +24,7 @@ namespace vfs {
         static constexpr auto elements_per_page     = page_size / element_size;
         static constexpr auto invalid_index         = UINT32_MAX;
         static constexpr auto control_bits_per_page = page_size * 8;
+        static constexpr auto max_page_count        = _MaxElementCount / elements_per_page;
 
     public:
         //------------------------------------------------------------------------------------------
@@ -332,7 +333,14 @@ namespace vfs {
                 std::lock_guard<std::mutex> __l(mutex_);
                 if (pageOfFreeIndex > pageCount_)
                 {
-                    grow(pageCount_);
+                    const auto pageCount = std::min(pageCount_, uint32_t(max_page_count) - pageCount_);
+                    if (pageCount == 0)
+                    {
+                        // Cannot grow anymore, abort is harsh but will do for now
+                        vfs_critical("Cannot grow virtual array");
+                        abort();
+                    }
+                    grow(pageCount);
                 }
             }
 
