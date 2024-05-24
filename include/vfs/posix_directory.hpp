@@ -20,8 +20,13 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         static bool exists(const path &dirPath)
         {
-            struct stat st {};
-            stat(dirPath.c_str(), &st);
+            struct stat st{};
+
+            if (stat(dirPath.c_str(), &st) == -1)
+            {
+                return false;
+            }
+
             return (st.st_mode & S_IFMT) == S_IFDIR;
         }
 
