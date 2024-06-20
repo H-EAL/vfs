@@ -19,12 +19,20 @@ namespace vfs {
 
     private:
         //------------------------------------------------------------------------------------------
+        static constexpr int32_t compute_max_page_count(float num)
+        {
+            const auto inum = static_cast<int32_t>(num);
+            return (num == static_cast<float>(inum)) ? inum : (inum + (num > 0 ? 1 : 0));
+        }
+
+    private:
+        //------------------------------------------------------------------------------------------
         static constexpr auto page_size             = 0x1000; // 4kB
         static constexpr auto element_size          = sizeof(T);
         static constexpr auto elements_per_page     = page_size / element_size;
         static constexpr auto invalid_index         = UINT32_MAX;
         static constexpr auto control_bits_per_page = page_size * 8;
-        static constexpr auto max_page_count        = _MaxElementCount / elements_per_page;
+        static constexpr auto max_page_count        = compute_max_page_count(float(_MaxElementCount) / float(elements_per_page));
 
     public:
         //------------------------------------------------------------------------------------------
