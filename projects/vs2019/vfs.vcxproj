@@ -108,6 +108,7 @@
     <ClInclude Include="..\..\include\vfs\posix_watcher.hpp" />
     <ClInclude Include="..\..\include\vfs\shared_memory.hpp" />
     <ClInclude Include="..\..\include\vfs\stream_interface.hpp" />
+    <ClInclude Include="..\..\include\vfs\string_converter.hpp" />
     <ClInclude Include="..\..\include\vfs\string_utils.hpp" />
     <ClInclude Include="..\..\include\vfs\virtual_allocator.hpp" />
     <ClInclude Include="..\..\include\vfs\virtual_allocator_interface.hpp" />

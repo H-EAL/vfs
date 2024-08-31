@@ -128,5 +128,8 @@
     <ClInclude Include="..\..\include\vfs\posix_pipe.hpp">
       <Filter>include\_impl\posix</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\vfs\string_converter.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

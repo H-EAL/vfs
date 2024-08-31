@@ -6,52 +6,10 @@
 #include <codecvt>
 #include <algorithm>
 
+#include "vfs/string_converter.hpp"
+
 
 namespace vfs {
-
-    //--------------------------------------------------------------------------------------------------
-    inline std::string wstring_to_string(const std::wstring &toConvert)
-    {
-        using convert_type = std::codecvt_utf8<wchar_t>;
-        static std::wstring_convert<convert_type, wchar_t> converter;
-        return converter.to_bytes(toConvert);
-    }
-
-    //--------------------------------------------------------------------------------------------------
-    inline std::wstring string_to_wstring(const std::string &toConvert)
-    {
-        using convert_type = std::codecvt_utf8<wchar_t>;
-        static std::wstring_convert<convert_type, wchar_t> converter;
-        return converter.from_bytes(toConvert);
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    template<typename _NativeStringType>
-    struct string_converter;
-    //----------------------------------------------------------------------------------------------
-    template<>
-    struct string_converter<std::string>
-    {
-        static std::string  to_string(const std::string &str)    { return str; }
-        static std::string  to_string(const std::wstring &str)   { return wstring_to_string(str); }
-        static std::wstring to_wstring(const std::wstring &str)  { return str; }
-        static std::wstring to_wstring(const std::string &str)   { return string_to_wstring(str); }
-
-        template<typename _StringType>
-        static std::string  to_native(const _StringType &str)    { return to_string(str); }
-    };
-    //----------------------------------------------------------------------------------------------
-    template<>
-    struct string_converter<std::wstring>
-    {
-        static std::string  to_string(const std::string &str)    { return str; }
-        static std::string  to_string(const std::wstring &str)   { return wstring_to_string(str); }
-        static std::wstring to_wstring(const std::wstring &str)  { return str; }
-        static std::wstring to_wstring(const std::string &str)   { return string_to_wstring(str); }
-
-        template<typename _StringType>
-        static std::wstring to_native(const _StringType &str)    { return to_wstring(str); }
-    };
 
     //----------------------------------------------------------------------------------------------
     inline std::string get_extension(const std::string &fileName)
