@@ -1,10 +1,6 @@
 #pragma once
 
-#include <vector>
 #include <string>
-#include <locale>
-#include <codecvt>
-#include <algorithm>
 
 #include "vfs/platform.hpp"
 

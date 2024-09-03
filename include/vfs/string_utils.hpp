@@ -2,8 +2,6 @@
 
 #include <vector>
 #include <string>
-#include <locale>
-#include <codecvt>
 #include <algorithm>
 
 #include "vfs/string_converter.hpp"
