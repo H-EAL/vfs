@@ -27,7 +27,7 @@ namespace vfs {
     inline std::string remove_extension(const std::string &fileName)
     {
         const auto pos = fileName.find_last_of('.');
-        return (pos != std::string::npos) ? fileName.substr(0, pos) : "";
+        return (pos != std::string::npos) ? fileName.substr(0, pos) : fileName;
     }
 
     //----------------------------------------------------------------------------------------------
