@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <string_view>
 
 namespace vfs {
 
@@ -34,6 +35,12 @@ namespace vfs {
             return read(toRead.data(), toRead.size());
         }
 
+        // Specialization for string view
+        uint64_t read(std::string_view &toRead)
+        {
+            return read(toRead.data(), toRead.size());
+        }
+
         // Specialization for vector
         template<typename T>
         uint64_t read(std::vector<T> &toRead)
@@ -59,6 +66,12 @@ namespace vfs {
 
         // Specialization for string
         uint64_t write(const std::string &toWrite)
+        {
+            return write(toWrite.data(), toWrite.size());
+        }
+
+        // Specialization for string view
+        uint64_t write(const std::string_view &toWrite)
         {
             return write(toWrite.data(), toWrite.size());
         }
@@ -124,6 +137,13 @@ namespace vfs {
         {
             const uint64_t sizeInBytes = N * sizeof(T);
             return _StreamImpl::write((const uint8_t*)toWrite, sizeInBytes);
+        }
+
+        template<int N>
+        uint64_t write(const char(&toWrite)[N], bool discardNullChar = false)
+        {
+            const uint64_t sizeInBytes = N * sizeof(char) - (discardNullChar ? 1 : 0);
+            return _StreamImpl::write((const uint8_t *)toWrite, sizeInBytes);
         }
 
         template<typename T, int N>
