@@ -62,7 +62,7 @@ namespace vfs {
                 // File name
                 pipeName_.c_str(),
                 // Access
-                win_file_access(access),
+                win_file_access(fileAccess_),
                 // TODO: Add shared access
                 win_file_share_mode(file_share_mode::read),
                 // Security attributes
@@ -89,6 +89,7 @@ namespace vfs {
             pipe_access pipeAccess
         )
             : pipeName_(name)
+            , fileAccess_(file_access::read_only)
         {
             pipeHandle_ = CreateNamedPipe
             (
