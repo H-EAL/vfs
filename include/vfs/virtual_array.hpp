@@ -167,7 +167,7 @@ namespace vfs {
             {
                 for (auto i = 0u; i < lastValidIndex_; ++i)
                 {
-                    if (pControlRegister_[i/64] & (1ull << (i%64)))
+                    if (pControlRegister_[i/64].load(std::memory_order_acquire) & (1ull << (i%64)))
                     {
                         pArray_[i].~T();
                     }
@@ -211,7 +211,7 @@ namespace vfs {
             new(pArray_ + freeIndex) T(std::forward<_Args>(args)...);
 
             // Mark as used here after actually constructing the element so iteration remains correct.
-            pControlRegister_[freeIndex / 64].fetch_or(1ull << (freeIndex % 64));
+            pControlRegister_[freeIndex / 64].fetch_or(1ull << (freeIndex % 64), std::memory_order_acq_rel);
 
             ++size_;
             return freeIndex;
@@ -224,7 +224,7 @@ namespace vfs {
             // Mark as unused here before actually deleting the element so iteration remains correct.
             // This part is a bit tricky as we might already be iterating over this element while
             // we are destroying it. Might cause some weird issues.
-            pControlRegister_[index / 64].fetch_and(~(1ull << (index % 64)));
+            pControlRegister_[index / 64].fetch_and(~(1ull << (index % 64)), std::memory_order_acq_rel);
 
             if constexpr (!std::is_trivially_destructible_v<T>)
             {
@@ -239,7 +239,7 @@ namespace vfs {
         bool isIndexValid(uint32_t index) const
         {
             return index < lastValidIndex_
-                && (pControlRegister_[index / 64] & (1ull << (index % 64))) != 0;
+                && (pControlRegister_[index / 64].load(std::memory_order_acquire) & (1ull << (index % 64))) != 0;
         }
 
         //------------------------------------------------------------------------------------------
@@ -338,7 +338,7 @@ namespace vfs {
             const auto pageOfFreeIndex = (freeIndex / elements_per_page) + 1;
             if (pageOfFreeIndex > pageCount_)
             {
-                std::lock_guard<std::mutex> __l(mutex_);
+                std::lock_guard<std::mutex> _(mutex_);
                 if (pageOfFreeIndex > pageCount_)
                 {
                     const auto pageCount = std::min(pageCount_, uint32_t(max_page_count) - pageCount_);
