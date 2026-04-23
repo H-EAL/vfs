@@ -56,7 +56,7 @@ namespace vfs {
         ~posix_file_view()
         {
             unmap();
-            
+
             if (sharedMemory_ && shm_unlink(name_.c_str()) == -1)
             {
                 vfs_errorf("shm_unlink(%s) failed with error: %s", name_.c_str(), get_last_error_as_string(errno).c_str());
@@ -92,7 +92,7 @@ namespace vfs {
                 //https://stackoverflow.com/questions/25170795/mmap-file-between-unrelated-processes
 
                 const auto sharedMemoryAccess   = posix_file_access(access);
-                // O_CREAT | O_EXCL flags will make shm_open return an error if a shared memory object with the given name already exists. 
+                // O_CREAT | O_EXCL flags will make shm_open return an error if a shared memory object with the given name already exists.
                 auto flags                      = sharedMemoryAccess | O_CREAT | O_EXCL;
                 const auto mode                 = S_IRUSR | S_IWUSR;
 
@@ -182,7 +182,7 @@ namespace vfs {
         {
             vfs_check(fileDescriptor_ != -1);
             struct stat st;
-            const auto result = fstat(fileDescriptor_, &st);
+            [[maybe_unused]] const auto result = fstat(fileDescriptor_, &st);
             vfs_check(result != -1);
             return st.st_size;
         }
@@ -205,7 +205,7 @@ namespace vfs {
                 vfs_errorf("munmap() failed with error: %s", get_last_error_as_string(errno).c_str());
                 return false;
             }
-            
+
             return true;
         }
 
@@ -217,7 +217,7 @@ namespace vfs {
                 vfs_errorf("msync() failed with error: %s", get_last_error_as_string(errno).c_str());
                 return false;
             }
-            
+
             return true;
         }
 
@@ -314,7 +314,7 @@ namespace vfs {
         file_sptr   spFile_;
         bool        sharedMemory_;
         path        name_;
-        uint32_t    fileDescriptor_;
+        int32_t     fileDescriptor_;
         uint8_t     *pData_;
         uint8_t     *pCursor_;
         int64_t     fileTotalSize_;

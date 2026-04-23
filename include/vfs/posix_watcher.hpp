@@ -31,8 +31,8 @@ namespace vfs {
         posix_watcher(const path &dir, std::chrono::duration<R, P> waitTimeout, const callback_t &callback)
             : running_(false)
             , dir_(dir)
-            , callback_(callback)
             , inotifyFd_(-1)
+            , callback_(callback)
             , waitTimeoutInMs_(std::chrono::duration_cast<std::chrono::milliseconds>(waitTimeout).count())
         {
             waitTimeoutInMs_ = (waitTimeoutInMs_ == 0) ? std::numeric_limits<uint64_t>::max() : waitTimeoutInMs_;
@@ -42,8 +42,8 @@ namespace vfs {
         posix_watcher(const path &dir, const callback_t &callback)
             : running_(false)
             , dir_(dir)
-            , callback_(callback)
             , inotifyFd_(-1)
+            , callback_(callback)
             , waitTimeoutInMs_(std::numeric_limits<uint64_t>::max())
         {}
 

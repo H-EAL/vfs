@@ -30,7 +30,7 @@
 #include "vfs/path.hpp"
 
 // LISTEN_BACKLOG corresponds to the maximum length to which the queue of pending conections for socketFd_ may grow.
-#define LISTEN_BACKLOG 50 
+#define LISTEN_BACKLOG 50
 
 
 namespace vfs {
@@ -76,11 +76,11 @@ namespace vfs {
             file_attributes         attributes
         )
             : pipeName_(name)
-            , fileAccess_(access)
             , socketFd_(-1)
             , clientFd_(-1)
+            , fileAccess_(access)
         {
-            // CLIENT. 
+            // CLIENT.
 
             // TO DO. Do something appropriate with access.
             // https://stackoverflow.com/questions/2588213/is-there-a-way-to-close-a-unix-socket-for-only-reading-or-writing
@@ -125,10 +125,10 @@ namespace vfs {
             , clientFd_(-1)
         {
             // SERVER.
-            
+
             // Create a socket with the socket() system call.
-            // Posix pipe access should be SOCK_STREAM. 
-            // 0 might have to be changed to appropriate protocol. 
+            // Posix pipe access should be SOCK_STREAM.
+            // 0 might have to be changed to appropriate protocol.
             socketFd_ = socket(AF_UNIX, SOCK_STREAM, 0);
 
             if (socketFd_ == -1)
@@ -187,19 +187,19 @@ namespace vfs {
         bool waitForConnection()
         {
             // Server.
-            
-            // Listen for connections with the listen() system call. 
+
+            // Listen for connections with the listen() system call.
             // listen() marks the socket referred to by socketFd_ as a passive socket, e.g. as a socket that will be used to accept incoming connection requests using accept().
             if (listen(socketFd_, LISTEN_BACKLOG) == -1)
             {
                 vfs_errorf("listen() failed with error: %s", get_last_error_as_string(errno).c_str());
             }
-            
+
             // Now we can accept incoming connections.
             auto peer_addr_size = (uint32_t)sizeof(sockaddr_un);
             auto peer_addr      = sockaddr_un{};
             // The accept() system call causes the process to block until a client connects to the server.
-            // It returns a new file descriptor, and all communication on this connection should be done using the new file descriptor. 
+            // It returns a new file descriptor, and all communication on this connection should be done using the new file descriptor.
             clientFd_ = accept(socketFd_, (sockaddr *)&peer_addr, (socklen_t *)&peer_addr_size);
 
             if (clientFd_ == -1)
@@ -216,7 +216,7 @@ namespace vfs {
         {
             // There is no function for determining how many bytes are left to read on a unix domain socket.
             // To read a message whose length cannot be determined in advance, just do a non-blocking reads until one returns EAGAIN or EWOULDBLOCK.
-            
+
             // Source: https://stackoverflow.com/questions/65204661/is-there-a-function-for-determining-how-many-bytes-are-left-to-read-on-a-unix-do
 
             return -1;

@@ -84,7 +84,7 @@ namespace vfs {
         const string_type& str() const { return pathStr_; }
         //------------------------------------------------------------------------------------------
         // Conversion to C string.
-        const auto c_str() const { return str().c_str(); }
+        auto c_str() const { return str().c_str(); }
 
     public:
         //------------------------------------------------------------------------------------------
