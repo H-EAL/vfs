@@ -184,7 +184,7 @@ namespace vfs {
             if (!ReadFile(fileHandle_, (LPVOID)dst, DWORD(sizeInBytes), &numberOfBytesRead, nullptr))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("ReadFile(%s, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("ReadFile(%s, %lu) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
             }
             return numberOfBytesRead;
         }
@@ -197,7 +197,7 @@ namespace vfs {
             if (!WriteFile(fileHandle_, (LPCVOID)src, DWORD(sizeInBytes), &numberOfBytesWritten, nullptr))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("WriteFile(%s, %d) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("WriteFile(%s, %lu) failed with error: %s", fileName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
             }
             return numberOfBytesWritten;
         }

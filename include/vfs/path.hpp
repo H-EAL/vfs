@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+#include <algorithm>
+#include <type_traits>
+
 #include "vfs/platform.hpp"
 #include "vfs/string_utils.hpp"
 

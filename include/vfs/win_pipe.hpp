@@ -192,7 +192,7 @@ namespace vfs {
                 const auto errorCode = GetLastError();
                 if (errorCode != ERROR_MORE_DATA && errorCode != ERROR_OPERATION_ABORTED)
                 {
-                    vfs_errorf("ReadFile(%s, %d) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                    vfs_errorf("ReadFile(%s, %lu) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
                     close();
                 }
             }
@@ -208,7 +208,7 @@ namespace vfs {
             if (!WriteFile(pipeHandle_, (LPCVOID)src, DWORD(sizeInBytes), &numberOfBytesWritten, nullptr))
             {
                 const auto errorCode = GetLastError();
-                vfs_errorf("WriteFile(%s, %d) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
+                vfs_errorf("WriteFile(%s, %lu) failed with error: %s", pipeName_.c_str(), DWORD(sizeInBytes), get_last_error_as_string(errorCode).c_str());
                 close();
             }
             return numberOfBytesWritten;
