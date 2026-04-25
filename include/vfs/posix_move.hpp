@@ -34,6 +34,14 @@ namespace vfs {
             return true;
         }
 
+        //----------------------------------------------------------------------------------------------
+        // Copies a file or a directory from src path to dst path.
+        // If src path is a directory, src and dst paths must be on the same drive.
+        static bool copy(const path &src, const path &dst, bool overwrite = false, int32_t maxAttempts = 1)
+        {
+            vfs_check(false);
+        }
+
     private:
         //----------------------------------------------------------------------------------------------
         static bool move_across_different_filesystems(const path &src, const path &dst, bool overwrite)
