@@ -39,7 +39,9 @@ namespace vfs {
         // If src path is a directory, src and dst paths must be on the same drive.
         static bool copy(const path &src, const path &dst, bool overwrite = false, int32_t maxAttempts = 1)
         {
+            // TODO.
             vfs_check(false);
+            return false;
         }
 
     private:
