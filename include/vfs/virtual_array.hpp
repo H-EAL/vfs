@@ -187,7 +187,7 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         virtual_array(virtual_array &&other)
         {
-            swap(other);
+            swap(std::move(other));
             other.reset();
         }
 
@@ -196,7 +196,7 @@ namespace vfs {
         {
             if (this != &other)
             {
-                swap(other);
+                swap(std::move(other));
                 other.reset();
             }
             return (*this);
@@ -292,15 +292,21 @@ namespace vfs {
         }
 
         //------------------------------------------------------------------------------------------
-        void swap(virtual_array &other)
+        void swap(virtual_array &&other)
         {
-            std::swap(size_                     , other.size_                       );
             std::swap(pArray_                   , other.pArray_                     );
             std::swap(pageCount_                , other.pageCount_                  );
-            std::swap(nextFreeIndex_            , other.nextFreeIndex_              );
-            std::swap(lastValidIndex_           , other.lastValidIndex_             );
             std::swap(pControlRegister_         , other.pControlRegister_           );
             std::swap(controlRegisterPageCount_ , other.controlRegisterPageCount_   );
+
+            auto other_size = other.size_.exchange(size_.load());
+            size_.store(other_size);
+
+            auto other_nextFreeIndex = other.nextFreeIndex_.exchange(nextFreeIndex_.load());
+            nextFreeIndex_.store(other_nextFreeIndex);
+
+            auto other_lastValidIndex = other.lastValidIndex_.exchange(lastValidIndex_.load());
+            lastValidIndex_.store(other_lastValidIndex);
         }
 
         //------------------------------------------------------------------------------------------
