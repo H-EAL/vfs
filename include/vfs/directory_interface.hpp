@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "vfs/path.hpp"
 
 
@@ -53,7 +55,7 @@ namespace vfs {
         {
             return files_;
         }
-        
+
         //------------------------------------------------------------------------------------------
         void scan(int32_t recurseToDepth = 0)
         {
