@@ -227,18 +227,29 @@ namespace vfs {
         {
             vfs_check(clientFd_ != -1);
 
-            // Read() is nonblocking since we specified the flag O_NONBLOCK to clientFd_.
-            // It will either read the total number of characters in the socket or 255, whichever is less, and return the number of characters read.
-            auto numberOfBytesRead = ::read(clientFd_, dst, sizeInBytes);
-
-            if (numberOfBytesRead == -1)
+            auto totalBytesRead = int64_t(0);
+            while(totalBytesRead < sizeInBytes)
             {
-                vfs_errorf("read() failed with error: %s", get_last_error_as_string(errno).c_str());
-                close();
-                return 0;
+                // Read() is nonblocking since we specified the flag O_NONBLOCK to clientFd_.
+                // It will either read the total number of characters in the socket or 255, whichever is less, and return the number of characters read.
+                auto bytesRead = ::read(clientFd_, dst + totalBytesRead, sizeInBytes - totalBytesRead);
+                if (bytesRead == 0)
+                {
+                    // Connection closed by peer.
+                    close();
+                    return totalBytesRead;
+                }
+                if (bytesRead == -1)
+                {
+                    vfs_errorf("read() failed with error: %s", get_last_error_as_string(errno).c_str());
+                    close();
+                    return 0;
+                }
+
+                totalBytesRead += bytesRead;
             }
 
-            return numberOfBytesRead;
+            return totalBytesRead;
         }
 
         //------------------------------------------------------------------------------------------
@@ -246,14 +257,21 @@ namespace vfs {
         {
             vfs_check(clientFd_ != -1);
 
-            auto numberOfBytesWritten = ::write(clientFd_, src, sizeInBytes);
-            if (numberOfBytesWritten == -1)
+            auto totalBytesWritten = int64_t(0);
+            while(totalBytesWritten < sizeInBytes)
             {
-                vfs_errorf("write() failed with error: %s", get_last_error_as_string(errno).c_str());
-                close();
+                auto bytesWritten = ::write(clientFd_, src + totalBytesWritten, sizeInBytes - totalBytesWritten);
+                if (bytesWritten == -1)
+                {
+                    vfs_errorf("write() failed with error: %s", get_last_error_as_string(errno).c_str());
+                    close();
+                    break;
+                }
+
+                totalBytesWritten += bytesWritten;
             }
 
-            return numberOfBytesWritten;
+            return totalBytesWritten;
         }
 
     private:
