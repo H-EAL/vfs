@@ -111,6 +111,7 @@ namespace vfs {
             if (connect(clientFd_, (sockaddr *)&serverAddr, sizeof(sockaddr_un)) == -1)
             {
                 vfs_errorf("connect() failed with error: %s", get_last_error_as_string(errno).c_str());
+                close();
             }
         }
 
