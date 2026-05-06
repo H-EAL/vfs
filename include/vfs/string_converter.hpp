@@ -44,9 +44,9 @@ namespace vfs {
         }
 
         std::setlocale(LC_ALL, "en_US.UTF-8");  // Set locale to handle UTF-8
-        size_t size_needed = std::wcstombs(nullptr, toConvert.c_str(), 0) + 1;
-        std::string result(size_needed, 0);
-        std::wcstombs(&result[0], toConvert.c_str(), size_needed);
+        size_t len = std::wcstombs(nullptr, toConvert.c_str(), 0);
+        std::string result(len, 0);
+        std::wcstombs(&result[0], toConvert.c_str(), len + 1);
 
         return result;
     }
@@ -59,9 +59,9 @@ namespace vfs {
         }
 
         std::setlocale(LC_ALL, "en_US.UTF-8");  // Set locale to handle UTF-8
-        size_t size_needed = std::mbstowcs(nullptr, toConvert.c_str(), 0) + 1;
-        std::wstring result(size_needed, 0);
-        std::mbstowcs(&result[0], toConvert.c_str(), size_needed);
+        size_t len = std::mbstowcs(nullptr, toConvert.c_str(), 0);
+        std::wstring result(len, 0);
+        std::mbstowcs(&result[0], toConvert.c_str(), len + 1);
 
         return result;
     }
