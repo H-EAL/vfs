@@ -168,18 +168,15 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         void close()
         {
-            if (socketFd_ != -1)
-            {
-                ::close(socketFd_);
-            }
             if (clientFd_ != -1)
             {
                 ::close(clientFd_);
-            }
-            if (isValid())
-            {
-                unlink(pipeName_.c_str());
                 clientFd_ = -1;
+            }
+            if (socketFd_ != -1)
+            {
+                ::close(socketFd_);
+                unlink(pipeName_.c_str());
                 socketFd_ = -1;
             }
         }
