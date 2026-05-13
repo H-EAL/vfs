@@ -1,24 +1,7 @@
 #pragma once
-
-// TODO. posix_pipe is a work in progress. There is no direct equivalent to a windows pipe.
-// The options in posix are fifo pipes (uni-directional) and sockets (bi-directional). This uses sockets presently, as windows pipes are bi-directional.
-
-// ISSUE WITH PORTABILITY (in the case of unix-sockets).
-
-//There is no good function to get the available bytes to read for unix sockets.
-
-// If a socket is blocking andwe read past the amount that there is, the read() call will block.
-// Therefore to complete a read it may be optimal to have the read be nonblocking so that we don't have to guess the number of bytes there is to read.
-// In this case read() will return if there is nothing to read rather than block.
-
-// However, in win_pipe we specify PIPE_WAIT to CreateNamedPipe(...) which enables blocking mode.This means that ReadFile does in fact block until there is something to read or a client is connected.
-// Issues:
-
-// 1. We want to specify non blocking mode to our socket to perform the read(since availableBytesToRead() does not function for posix_pipe), so there is no good way to block this read.
-// Solution could be to pass an argument bool block to pipe::read() to specify if want it to block or not, but this could also alter functionality of win_pipe(although we could make block default to true).
-
-// 2. With the way unix sockets work, we cannot do a read() until client is connected since our clientFd_ that we will be providing to the read() will be - 1.
-// If we are the server, we MUST call waitForConnection() before read().
+// Posix pipe is implemented with a Unix domain socket which allows for bidirectional inter-process communication.
+// As these sockets are bidirectional at the kernel level, the read/write access params passed to ctor are ignored.
+// Note that availableBytesToRead is not queryable with sockets, so length of message should be passed first.
 
 #include <chrono>
 #include <sys/stat.h>
@@ -28,9 +11,6 @@
 #include "vfs/platform.hpp"
 #include "vfs/posix_file_flags.hpp"
 #include "vfs/path.hpp"
-
-// LISTEN_BACKLOG corresponds to the maximum length to which the queue of pending conections for socketFd_ may grow.
-#define LISTEN_BACKLOG 50
 
 
 namespace vfs {
@@ -50,7 +30,6 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         native_handle nativeHandle() const
         {
-            // TODO. return socketFd_ or clientFd_ ?
             return clientFd_;
         }
 
@@ -63,7 +42,7 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         file_access fileAccess() const
         {
-            return fileAccess_;
+            return file_access::read_write;
         }
 
     protected:
@@ -71,46 +50,34 @@ namespace vfs {
         posix_pipe
         (
             const path &name,
-            file_access             access,
-            file_flags              flags,
-            file_attributes         attributes
+            file_access     access,
+            file_flags      flags,
+            file_attributes attributes
         )
             : pipeName_(name)
-            , socketFd_(-1)
+            , serverFd_(-1)
             , clientFd_(-1)
-            , fileAccess_(access)
         {
-            // CLIENT.
+            // (Client socket)
 
-            // TO DO. Do something appropriate with access.
-            // https://stackoverflow.com/questions/2588213/is-there-a-way-to-close-a-unix-socket-for-only-reading-or-writing
-            // Don't think there is a good way to make a socket read only or write only. Maybe I can check the permissions before the call to read() and write() ?
-
-            // Create a socket with the socket() system call.
+            // Create socket (client endpoint)
             clientFd_ = socket(AF_UNIX, SOCK_STREAM, 0);
-
-            // Not sure if shutdown works with read() and write() operations however.
-            //if (access == file_access::read_only)
-            //{
-            //    // Disables further send operations.
-            //    shutdown(clientFd_, SHUT_WR);
-            //}
-            //else if (access == file_access::write_only)
-            //{
-            //    // Disables further receive operations.
-            //    shutdown(clientFd_, SHUT_RD);
-            //}
+            if (clientFd_ == -1)
+            {
+                vfs_errorf("[pipe: '%s'] socket() failed with error: %s",
+                    pipeName_.c_str(), get_last_error_as_string(errno).c_str());
+                return;
+            }
 
             auto serverAddr = sockaddr_un{};
-            // Clear structure
-            memset(&serverAddr, 0, sizeof(sockaddr_un));
             serverAddr.sun_family = AF_UNIX;
             strncpy(serverAddr.sun_path, pipeName_.c_str(), sizeof(serverAddr.sun_path) - 1);
 
-            // Connect the socket to the address of the server using the connect() system call.
+            // Connect client socket to server using the server address
             if (connect(clientFd_, (sockaddr *)&serverAddr, sizeof(sockaddr_un)) == -1)
             {
-                vfs_errorf("connect() failed with error: %s", get_last_error_as_string(errno).c_str());
+                vfs_errorf("[pipe: '%s'] connect() failed with error: %s",
+                    pipeName_.c_str(), get_last_error_as_string(errno).c_str());
                 close();
             }
         }
@@ -122,32 +89,28 @@ namespace vfs {
             pipe_access pipeAccess
         )
             : pipeName_(name)
-            , socketFd_(-1)
+            , serverFd_(-1)
             , clientFd_(-1)
         {
-            // SERVER.
+            // (Server socket)
 
-            // Create a socket with the socket() system call.
-            // Posix pipe access should be SOCK_STREAM.
-            // 0 might have to be changed to appropriate protocol.
-            socketFd_ = socket(AF_UNIX, SOCK_STREAM, 0);
-
-            if (socketFd_ == -1)
+            // Create socket (server endpoint)
+            serverFd_ = socket(AF_UNIX, SOCK_STREAM, 0);
+            if (serverFd_ == -1)
             {
-                vfs_errorf("socket() failed with error: %s", get_last_error_as_string(errno).c_str());
+                vfs_errorf("[pipe: '%s'] socket() failed with error: %s",
+                    pipeName_.c_str(), get_last_error_as_string(errno).c_str());
                 return;
             }
 
-            // Bind the socket to an address using the bind() system call.
+            // Bind the socket to an address (the address is the pipe name)
             auto myAddr = sockaddr_un{};
-            // Clear structure
-            memset(&myAddr, 0, sizeof(sockaddr_un));
             myAddr.sun_family = AF_UNIX;
             strncpy(myAddr.sun_path, pipeName_.c_str(), sizeof(myAddr.sun_path) - 1);
-
-            if (bind(socketFd_, (sockaddr *)&myAddr, sizeof(sockaddr_un)) == -1)
+            if (bind(serverFd_, (sockaddr *)&myAddr, sizeof(sockaddr_un)) == -1)
             {
-                vfs_errorf("bind() failed with error: %s", get_last_error_as_string(errno).c_str());
+                vfs_errorf("[pipe: '%s'] bind() failed with error: %s",
+                    pipeName_.c_str(), get_last_error_as_string(errno).c_str());
                 close();
             }
         }
@@ -162,7 +125,7 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         bool isValid() const
         {
-            return clientFd_ != -1 || socketFd_ != -1;
+            return clientFd_ != -1 || serverFd_ != -1;
         }
 
         //------------------------------------------------------------------------------------------
@@ -173,36 +136,37 @@ namespace vfs {
                 ::close(clientFd_);
                 clientFd_ = -1;
             }
-            if (socketFd_ != -1)
+            if (serverFd_ != -1)
             {
-                ::close(socketFd_);
+                ::close(serverFd_);
                 unlink(pipeName_.c_str());
-                socketFd_ = -1;
+                serverFd_ = -1;
             }
         }
 
         //------------------------------------------------------------------------------------------
         bool waitForConnection()
         {
-            // Server.
+            // (Server socket)
 
-            // Listen for connections with the listen() system call.
-            // listen() marks the socket referred to by socketFd_ as a passive socket, e.g. as a socket that will be used to accept incoming connection requests using accept().
-            if (listen(socketFd_, LISTEN_BACKLOG) == -1)
+            // Listen for 1 connection
+            constexpr auto listenBacklog = 1;
+            if (listen(serverFd_, listenBacklog) == -1)
             {
-                vfs_errorf("listen() failed with error: %s", get_last_error_as_string(errno).c_str());
+                vfs_errorf("[pipe: '%s'] listen() failed with error: %s",
+                    pipeName_.c_str(), get_last_error_as_string(errno).c_str());
+                return false;
             }
 
-            // Now we can accept incoming connections.
-            auto peer_addr_size = (uint32_t)sizeof(sockaddr_un);
-            auto peer_addr      = sockaddr_un{};
-            // The accept() system call causes the process to block until a client connects to the server.
-            // It returns a new file descriptor, and all communication on this connection should be done using the new file descriptor.
-            clientFd_ = accept(socketFd_, (sockaddr *)&peer_addr, (socklen_t *)&peer_addr_size);
+            auto clientAddrSize = socklen_t(sizeof(sockaddr));
+            auto clientAddr = sockaddr{};
+            // Accept incoming connections. Block until client connects 
+            clientFd_ = accept(serverFd_, &clientAddr, &clientAddrSize);
 
             if (clientFd_ == -1)
             {
-                vfs_errorf("accept() failed with error: %s", get_last_error_as_string(errno).c_str());
+                vfs_errorf("[pipe: '%s'] accept() failed with error: %s",
+                    pipeName_.c_str(), get_last_error_as_string(errno).c_str());
                 return false;
             }
 
@@ -212,10 +176,9 @@ namespace vfs {
         //------------------------------------------------------------------------------------------
         int64_t availableBytesToRead() const
         {
-            // There is no function for determining how many bytes are left to read on a unix domain socket.
-            // To read a message whose length cannot be determined in advance, just do a non-blocking reads until one returns EAGAIN or EWOULDBLOCK.
-
-            // Source: https://stackoverflow.com/questions/65204661/is-there-a-function-for-determining-how-many-bytes-are-left-to-read-on-a-unix-do
+            vfs_errorf("[pipe: '%s'] availableBytesToRead() is not supported on POSIX: "
+                "Unix sockets do not expose pending byte count."
+                "Send message length ahead of the payload instead.", pipeName_.c_str());
 
             return -1;
         }
@@ -226,20 +189,21 @@ namespace vfs {
             vfs_check(clientFd_ != -1);
 
             auto totalBytesRead = int64_t(0);
-            while(totalBytesRead < sizeInBytes)
+            while (totalBytesRead < sizeInBytes)
             {
-                // Read() is nonblocking since we specified the flag O_NONBLOCK to clientFd_.
-                // It will either read the total number of characters in the socket or 255, whichever is less, and return the number of characters read.
+                // Read blocks until data is available, the connection closes or an error occurs
                 auto bytesRead = ::read(clientFd_, dst + totalBytesRead, sizeInBytes - totalBytesRead);
                 if (bytesRead == 0)
                 {
-                    // Connection closed by peer.
+                    // Connection closed by peer
                     close();
                     return totalBytesRead;
                 }
                 if (bytesRead == -1)
                 {
-                    vfs_errorf("read() failed with error: %s", get_last_error_as_string(errno).c_str());
+                    // Error occurred
+                    vfs_errorf("[pipe: '%s'] read() failed with error: %s",
+                        pipeName_.c_str(), get_last_error_as_string(errno).c_str());
                     close();
                     return 0;
                 }
@@ -256,12 +220,13 @@ namespace vfs {
             vfs_check(clientFd_ != -1);
 
             auto totalBytesWritten = int64_t(0);
-            while(totalBytesWritten < sizeInBytes)
+            while (totalBytesWritten < sizeInBytes)
             {
                 auto bytesWritten = ::write(clientFd_, src + totalBytesWritten, sizeInBytes - totalBytesWritten);
                 if (bytesWritten == -1)
                 {
-                    vfs_errorf("write() failed with error: %s", get_last_error_as_string(errno).c_str());
+                    vfs_errorf("[pipe: '%s'] write() failed with error: %s",
+                        pipeName_.c_str(), get_last_error_as_string(errno).c_str());
                     close();
                     break;
                 }
@@ -274,10 +239,9 @@ namespace vfs {
 
     private:
         //------------------------------------------------------------------------------------------
-        path        pipeName_;
-        int32_t     socketFd_;
-        int32_t     clientFd_;
-        file_access fileAccess_;
+        path    pipeName_;
+        int32_t serverFd_;
+        int32_t clientFd_;
     };
 
 } /*vfs*/
