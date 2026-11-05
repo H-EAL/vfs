@@ -23,16 +23,18 @@ namespace vfs {
     //----------------------------------------------------------------------------------------------
     inline DWORD win_file_share_mode(file_share_mode shareMode)
     {
-        switch (shareMode)
-        {
-        case file_share_mode::exclusive:	return 0;
-        case file_share_mode::can_delete:	return FILE_SHARE_DELETE;
-        case file_share_mode::read:			return FILE_SHARE_READ;
-        case file_share_mode::write:		return FILE_SHARE_WRITE;
-        }
+        auto mode = DWORD{ 0 };
 
-        vfs_check(false);
-        return 0;
+        if (uint32_t(shareMode) & uint32_t(file_share_mode::can_delete))
+            mode |= FILE_SHARE_DELETE;
+
+        if (uint32_t(shareMode) & uint32_t(file_share_mode::read))
+            mode |= FILE_SHARE_READ;
+
+        if (uint32_t(shareMode) & uint32_t(file_share_mode::write))
+            mode |= FILE_SHARE_WRITE;
+
+        return mode;
     }
 
     //----------------------------------------------------------------------------------------------

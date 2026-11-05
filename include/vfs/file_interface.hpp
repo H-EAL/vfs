@@ -27,10 +27,11 @@ namespace vfs {
             const path              &filePath,
             file_access             access,
             file_creation_options   creationOptions,
-            file_flags              flags       = file_flags::none,
-            file_attributes         attributes  = file_attributes::normal
+            file_flags              flags           = file_flags::none,
+            file_attributes         attributes      = file_attributes::normal,
+            file_share_mode         shareMode       = file_share_mode::read
         )
-            : base_type(filePath, access, creationOptions, flags, attributes)
+            : base_type(filePath, access, creationOptions, flags, attributes, shareMode)
         {}
 
     public:

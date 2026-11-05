@@ -37,22 +37,6 @@ namespace vfs {
     }
 
     //----------------------------------------------------------------------------------------------
-    inline uint64_t posix_file_share_mode(file_share_mode shareMode)
-    {
-        switch (shareMode)
-        {
-        case file_share_mode::exclusive:	return 0;
-        // For a user to be able to delete a file, they must have write permission for the directory and own the file they want to delete.
-        case file_share_mode::can_delete:	return S_IWUSR;
-        case file_share_mode::read:			return S_IRUSR;
-        case file_share_mode::write:		return S_IWUSR;
-        }
-
-        vfs_check(false);
-        return 0;
-    }
-
-    //----------------------------------------------------------------------------------------------
     inline uint64_t posix_file_creation_options(file_creation_options creationOption)
     {
         switch (creationOption)

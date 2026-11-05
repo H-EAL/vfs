@@ -44,7 +44,8 @@ namespace vfs {
             file_access             access,
             file_creation_options   creationOption,
             file_flags              flags,
-            file_attributes         attributes
+            file_attributes         attributes,
+            file_share_mode         shareMode
         )
             : fileName_(name)
             , fileHandle_(INVALID_HANDLE_VALUE)
@@ -56,8 +57,7 @@ namespace vfs {
                 fileName_.c_str(),
                 // Access
                 win_file_access(access),
-                // TODO: Add shared access
-                win_file_share_mode(file_share_mode::read),
+                win_file_share_mode(shareMode),
                 // Security attributes
                 nullptr,
                 // Creation options
