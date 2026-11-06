@@ -189,7 +189,7 @@ TEST_CASE("Fileview.", "[fileview]")
                 auto viewSize = 50;
                 WHEN("we open a read_write_view with vfs::file::open_if_existing with viewSize")
                 {
-                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test1.txt"), vfs::file_creation_options::open_if_existing, vfs::file_flags::none, vfs::file_attributes::normal, viewSize);
+                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test1.txt"), vfs::file_creation_options::open_if_existing, vfs::file_flags::none, vfs::file_attributes::normal, vfs::file_share_mode::read, viewSize);
                     THEN("we should fail")
                     {
                         REQUIRE(spFileView == nullptr);
@@ -199,7 +199,7 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_write_view with vfs::file::create_or_overwrite with viewSize")
                 {
-                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test1.txt"), vfs::file_creation_options::create_or_overwrite, vfs::file_flags::none, vfs::file_attributes::normal, viewSize);
+                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test1.txt"), vfs::file_creation_options::create_or_overwrite, vfs::file_flags::none, vfs::file_attributes::normal, vfs::file_share_mode::read, viewSize);
                     THEN("we should succeed")
                     {
                         REQUIRE(spFileView != nullptr);
@@ -210,7 +210,7 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_write_view with vfs::file::open_or_create with viewSize")
                 {
-                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test2.txt"), vfs::file_creation_options::open_or_create, vfs::file_flags::none, vfs::file_attributes::normal, viewSize);
+                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test2.txt"), vfs::file_creation_options::open_or_create, vfs::file_flags::none, vfs::file_attributes::normal, vfs::file_share_mode::read, viewSize);
                     THEN("we should succeed")
                     {
                         REQUIRE(spFileView != nullptr);
@@ -221,7 +221,7 @@ TEST_CASE("Fileview.", "[fileview]")
 
                 WHEN("we open a read_write_view with vfs::file::create_if_nonexisting with viewSize")
                 {
-                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test3.txt"), vfs::file_creation_options::create_if_nonexisting, vfs::file_flags::none, vfs::file_attributes::normal, viewSize);
+                    auto spFileView = vfs::open_read_write_view(vfs::path(test_directory + "\\test\\fileview\\readwrite\\test3.txt"), vfs::file_creation_options::create_if_nonexisting, vfs::file_flags::none, vfs::file_attributes::normal, vfs::file_share_mode::read, viewSize);
                     THEN("we should succeed")
                     {
                         REQUIRE(spFileView != nullptr);

@@ -35,10 +35,11 @@ namespace vfs {
         const path              &fileName,
         file_creation_options   creationOptions,
         file_flags              fileFlags = file_flags::none,
-        file_attributes         fileAttributes = file_attributes::normal
+        file_attributes         fileAttributes = file_attributes::normal,
+        file_share_mode         fileShareMode = file_share_mode::read
     )
     {
-        return file_sptr(new file_stream(fileName, file_access::read_only, creationOptions, fileFlags, fileAttributes));
+        return file_sptr(new file_stream(fileName, file_access::read_only, creationOptions, fileFlags, fileAttributes, fileShareMode));
     }
     //----------------------------------------------------------------------------------------------
 
@@ -49,10 +50,11 @@ namespace vfs {
         const path              &fileName,
         file_creation_options   creationOptions,
         file_flags              fileFlags = file_flags::none,
-        file_attributes         fileAttributes = file_attributes::normal
+        file_attributes         fileAttributes = file_attributes::normal,
+        file_share_mode         fileShareMode = file_share_mode::read
     )
     {
-        return file_sptr(new file_stream(fileName, file_access::write_only, creationOptions, fileFlags, fileAttributes));
+        return file_sptr(new file_stream(fileName, file_access::write_only, creationOptions, fileFlags, fileAttributes, fileShareMode));
     }
     //----------------------------------------------------------------------------------------------
 
@@ -63,10 +65,11 @@ namespace vfs {
         const path              &fileName,
         file_creation_options   creationOptions,
         file_flags              fileFlags = file_flags::none,
-        file_attributes         fileAttributes = file_attributes::normal
+        file_attributes         fileAttributes = file_attributes::normal,
+        file_share_mode         fileShareMode = file_share_mode::read
     )
     {
-        return file_sptr(new file_stream(fileName, file_access::read_write, creationOptions, fileFlags, fileAttributes));
+        return file_sptr(new file_stream(fileName, file_access::read_write, creationOptions, fileFlags, fileAttributes, fileShareMode));
     }
     //----------------------------------------------------------------------------------------------
 

@@ -51,7 +51,10 @@ namespace vfs {
             file_access             access,
             file_creation_options   creationOption,
             file_flags              flags,
-            file_attributes         attributes
+            file_attributes         attributes,
+            // Posix has no share modes, any process with file permissions can read, write, delete
+            // at the same time. Therefore we can ignore shareMode.
+            file_share_mode         /*shareMode*/
         )
             : fileName_(name)
             , fileDescriptor_(-1)
@@ -75,7 +78,6 @@ namespace vfs {
            
             const auto _flags =
                 posix_file_access(access)                           | 
-                posix_file_share_mode(file_share_mode::read)        |
                 posix_file_creation_options(_creationOption)        |
                 posix_file_flags(flags)                             |
                 posix_file_attributes(attributes);

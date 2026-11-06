@@ -14,12 +14,12 @@ namespace vfs {
         truncate_existing
     };
 
-	enum class file_share_mode
+	enum class file_share_mode : uint32_t
 	{
-		exclusive,
-		can_delete,
-		read,
-		write
+		exclusive   = 0,
+		can_delete  = 1 << 0,
+		read        = 1 << 1,
+		write       = 1 << 2
 	};
 
     enum class file_flags : uint32_t
